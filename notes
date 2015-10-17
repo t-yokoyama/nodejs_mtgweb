@@ -1,0 +1,111 @@
+
+TODO
+ x 1 learn nodejs/express server framework
+ x 2 learn socketio for sending events between browsers
+ x 3 learn canvas for drawing magic cards
+   x figure out how to embed local image into nodejs served file
+     (this seems to only work with absolute file paths)
+ x 4 learn how to drag an image and persist its location
+   - http://jqueryui.com/draggable/
+   - http://jsfiddle.net/g6m5t8co/1/
+ x find out how to get x/y pos of a card after it's been dragged
+   - http://jsfiddle.net/davidThomas/DGbT3/3/
+ x use canvas instead of div (what about svg?)
+   - http://stackoverflow.com/questions/5882716/html5-canvas-vs-svg-vs-div
+ x figure out how to set the x/y pos of a card via button/action
+   - http://api.jquery.com/offset/ (.offset(x, y);)
+ x figure out how to set draggable/offset without manually naming specific id
+
+ - use GIT!!
+
+ - think of data structures/functions necessary for creating/maintaining cards in each zone
+
+   - cards: array with cardId, srcImage, enum state, bool tapped
+   - library: ordered array with cardId's
+   - hand: is this necessary?
+   - graveyard: is this necessary?
+   - exile: is this necessary?
+
+   - enum state:
+     DECK
+     HAND
+     BATTLEFIELD
+     BATTLEFIELD_FACEDOWN
+     BATTLEFIELD_TRANSFORMED
+     BATTLEFIELD_FLIPPED
+     GRAVEYARD
+     EXILE
+
+   - addCard(): adds <img> to DOM, initially draws image face down
+   - revealCard(): redraws image face up
+
+
+
+ - figure out how to load card data from a database
+
+
+ - figure out how to change depth ordering of cards
+ - implement a status variable? (e.g. boolean tapped)
+ - figure out how to do a right-click menu
+   - http://www.sitepoint.com/building-custom-right-click-context-menu-javascript/
+ - figure out how to spawn a card on the fly (with all features, e.g. draggable)
+ - see if jquery can do any of the above
+
+
+ - ? decide how to animate transitions from opponent
+ - ? make an internal database of cards (id, image...)
+ - ? learn how to incorporate databases into nodejs server
+
+
+
+
+
+
+
+
+
+FEATURE LIST
+  ZONES
+   - battlefield
+   - hand
+   - library
+   - graveyard
+   - exile
+   - card info section
+   - game info section (life totals, turn #, etc)
+   - chat window
+  FEATURES
+   * right click menu possible?
+   - drag card
+   - tap card
+   - stack card (aura)
+   - flip card (transform, morphs, kamigawa flip)
+   - draw card
+   - shuffle deck
+
+CODE SNIPPETS
+
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>Canvas:</p>
+<canvas id="myCanvas" width="220" height="277" style="border:2px solid #222222;">
+Your browser does not support the HTML5 canvas tag.
+</canvas>
+
+<script>
+window.onload = function() {
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    var img = new Image();
+    img.src = 'img_the_scream.jpg';
+    ctx.drawImage(img, 0, 0);
+}
+</script>
+
+</body>
+</html>
+
+

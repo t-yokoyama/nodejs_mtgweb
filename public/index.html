@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+  <head>
+    <title>MTG web</title>
+
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+    <style>
+
+      .zone { border: 1px; border-style: dashed; padding: 0px; background-color: #cccccc; height: 128px; width: 98px; position: absolute;}
+      #library { top: 360px; left: 180px; }
+      #graveyard { top: 360px; left: 60px; }
+      #exile { top: 200px; left: 180px; }
+      #hand { width: 99%; bottom: 0px; left: 0px; }
+      #battlefield { height: 100%; width: 100%; top: 0px; left: 0px; position: absolute; }
+
+      .card { background-color: #aaaaaa; position: absolute; }
+
+      body { font: 13px Helvetica, Arial; }
+
+    </style>
+
+
+
+    <script>
+
+      function generateCard(cardId, image) {
+
+        var canvas = document.createElement("canvas");
+        canvas.id = cardId;
+        canvas.height = 130;
+        canvas.width = 100;
+        canvas.setAttribute("class", "card my_card");
+        document.body.appendChild(canvas);
+
+        var imageObj = new Image();
+        imageObj.src = image;
+
+        var context = canvas.getContext('2d');
+
+        imageObj.onload = function() {
+          context.drawImage(imageObj, 0, 0, 100, 130);
+        }
+
+        $("#" + cardId).offset({ top: 360, left: 180});
+        cardEntry = {
+          imgSrc : "images/cardback.jpg",
+          zone : ZoneEnum.LIBRARY,
+          tapped : false,
+          faceDown : true,
+          flipped : false,
+          transformed : false,
+          numCounters : 0
+        };
+        g_directory.push(cardEntry);
+        g_library.push(cardId);
+      }
+
+      function moveCardToZone() {
+      }
+
+      function displayLibrary() {
+      }
+
+      function displayGraveyard() {
+      }
+
+      function displayExile() {
+      }
+
+      function displayHand() {
+      }
+
+
+
+
+
+
+
+      $(document).ready(function() {
+
+        // global variables
+        window.ZoneEnum = {
+          BATTLEFIELD : 1,
+          HAND : 2,
+          LIBRARY : 3,
+          GRAVEYARD : 4,
+          EXILE : 5
+        };
+
+        window.g_directory = [];
+        window.g_library = [];
+        window.g_graveyard = [];
+        window.g_exile = [];
+        window.g_hand = [];
+
+        generateCard(0, "images/forest.jpg");
+        generateCard(1, "images/seraph_of_dawn.jpg");
+
+        $(".my_card").draggable({ // grid: [20, 20],
+                                  snap: ".zone",
+                                  snapMode: "inner",
+                                  snapTolerance: 65});
+
+
+        $("#battlefield").droppable({
+          accept: ".my_card",
+          drop: function( event, ui ) {
+
+
+            // WHY DOESNT THIS WORK?
+            
+            var imageObj = new Image();
+            imageObj.src = "images/cardback.jpg";
+
+            var context = ui.draggable.getContext('2d');
+
+              context.drawImage(imageObj, 0, 0, 100, 130);
+
+          }
+        });
+        
+        $("#hand").droppable({
+          accept: ".my_card",
+          greedy: true,
+          drop: function( event, ui ) {
+            // hand drag code
+
+          }
+        });
+
+        $("#library").droppable({
+          accept: ".my_card",
+          greedy: true,
+          drop: function( event, ui ) {
+            // lib drag code
+
+          }
+        });
+
+        $("#graveyard").droppable({
+          accept: ".my_card",
+          greedy: true,
+          drop: function( event, ui ) {
+            // graveyard drag code
+
+          }
+        });
+
+        $("#exile").droppable({
+          accept: ".my_card",
+          greedy: true,
+          drop: function( event, ui ) {
+            // exile drag code
+
+          }
+        });
+
+
+
+
+/*
+        $("#button1").click(function() {
+          $("#card1").show();
+          $("#card1").offset({ top: 100, left: 100 });
+          $("#card2").show();
+          $("#card2").offset({ top: 100, left: 200 });
+        });
+
+        $("#button2").click(function() {
+          $("#card1").hide();
+          $("#card2").hide();
+        });
+*/
+
+      });
+    </script>
+
+  </head>
+
+  <body>
+
+<!--
+    <button type="button" id="button1">reset cards</button>
+    <button type="button" id="button2">hide cards</button>
+-->
+
+    <div id="battlefield">battlefield
+
+      <div class="zone" id="library">library</div>
+      <div class="zone" id="graveyard">graveyard</div>
+      <div class="zone" id="exile">exile</div>
+      <div class="zone" id="hand">hand</div>
+
+    </div>
+
+<!--
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+
+    <script>
+      var client_io = io();
+      $('form').submit(function(){
+        client_io.emit('chat message', $('#m').val());
+        $('#m').val('');
+        return false;
+      });
+      client_io.on('chat message', function(msg){
+        $('#messages').append($('<li>').text(msg));
+      });
+    </script>
+-->
+
+
+
+  </body>
+</html>

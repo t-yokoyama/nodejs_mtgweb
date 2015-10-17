@@ -1,0 +1,10 @@
+{
+  "name": "mtg-web",
+  "version": "0.0.1",
+  "description": "mtg web draft",
+  "dependencies": {
+    "express": "^4.10.2",
+    "jquery": "^2.1.4",
+    "socket.io": "^1.3.7"
+  }
+}
