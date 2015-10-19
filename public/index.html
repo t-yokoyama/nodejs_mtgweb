@@ -9,16 +9,69 @@
 
     <style>
 
-      .zone { border: 1px; border-style: dashed; padding: 0px; background-color: #cccccc; height: 128px; width: 98px; position: absolute;}
-      #library { top: 360px; left: 180px; }
-      #graveyard { top: 360px; left: 60px; }
-      #exile { top: 200px; left: 180px; }
-      #hand { width: 99%; bottom: 0px; left: 0px; }
-      #battlefield { height: 100%; width: 100%; top: 0px; left: 0px; position: absolute; }
+      body {
+        margin: 0px;
+        padding: 0px;
+        font: 13px Helvetica, Arial;
+      }
 
-      .card { background-color: #aaaaaa; position: absolute; }
+      div {
+        box-sizing: border-box;
+      }
 
-      body { font: 13px Helvetica, Arial; }
+      div#window {
+        height: 100%;
+        width: 100%;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        position: absolute;
+      }
+
+      div#battlefield_wrapper {
+        top: 130px;
+        bottom: 130px;
+        left: 0px;
+        right: 0px;
+        position: absolute;
+      }
+
+      div.battlefield {
+        height: 50%;
+        width: 100%;
+        position: relative;
+      }
+
+      div#my_battlefield { background-color: #ffcccc; }
+      div#opp_battlefield { background-color: #ccffcc; }
+
+      div.zone {
+        background-color: #cccccc;
+        height: 130px;
+        width: 100px;
+        position: absolute;
+        padding: 0px;
+        border: 1px;
+        border-style: dashed;
+      }
+
+      div#library { top: 20px; left: 140px; }
+      div#graveyard { top: 20px; left: 20px; }
+      div#exile { top: 20px; right: 20px; }
+
+      div#hand {
+        width: 100%;
+        bottom: 0px;
+        position: absolute;
+      }
+
+      img.card {
+        background-color: #aaaaaa;
+        height: 130px;
+        width: 100px;
+        position: absolute;
+      }
 
     </style>
 
@@ -28,23 +81,15 @@
 
       function generateCard(cardId, image) {
 
-        var canvas = document.createElement("canvas");
-        canvas.id = cardId;
-        canvas.height = 130;
-        canvas.width = 100;
-        canvas.setAttribute("class", "card my_card");
-        document.body.appendChild(canvas);
+        var imgElement = document.createElement("img");
+        imgElement.id = cardId;
+        imgElement.src = image;
+        imgElement.setAttribute("class", "card my_card");
+        document.getElementById("my_battlefield").appendChild(imgElement);
 
-        var imageObj = new Image();
-        imageObj.src = image;
+        $("#" + cardId).css("top", 20);
+        $("#" + cardId).css("left", 140);
 
-        var context = canvas.getContext('2d');
-
-        imageObj.onload = function() {
-          context.drawImage(imageObj, 0, 0, 100, 130);
-        }
-
-        $("#" + cardId).offset({ top: 360, left: 180});
         cardEntry = {
           imgSrc : "images/cardback.jpg",
           zone : ZoneEnum.LIBRARY,
@@ -96,6 +141,8 @@
         window.g_exile = [];
         window.g_hand = [];
 
+
+
         generateCard(0, "images/forest.jpg");
         generateCard(1, "images/seraph_of_dawn.jpg");
 
@@ -105,20 +152,13 @@
                                   snapTolerance: 65});
 
 
-        $("#battlefield").droppable({
+        $("#window").droppable({
           accept: ".my_card",
           drop: function( event, ui ) {
 
-
-            // WHY DOESNT THIS WORK?
-            
-            var imageObj = new Image();
-            imageObj.src = "images/cardback.jpg";
-
-            var context = ui.draggable.getContext('2d');
-
-              context.drawImage(imageObj, 0, 0, 100, 130);
-
+            // why doesn't think work?
+            ui.draggable.src = "images/cardback.jpg"
+            ui.draggable.height = "200"
           }
         });
         
@@ -187,13 +227,17 @@
     <button type="button" id="button2">hide cards</button>
 -->
 
-    <div id="battlefield">battlefield
+    <div id="window">
 
-      <div class="zone" id="library">library</div>
-      <div class="zone" id="graveyard">graveyard</div>
-      <div class="zone" id="exile">exile</div>
+      <div id="battlefield_wrapper">
+        <div class="battlefield" id="opp_battlefield">opp battlefield</div>
+        <div class="battlefield" id="my_battlefield">my battlefield
+          <div class="zone" id="library">library</div>
+          <div class="zone" id="graveyard">graveyard</div>
+          <div class="zone" id="exile">exile</div>
+        </div>
+      </div>
       <div class="zone" id="hand">hand</div>
-
     </div>
 
 <!--
