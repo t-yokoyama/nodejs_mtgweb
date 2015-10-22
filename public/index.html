@@ -83,39 +83,134 @@
 
         var imgElement = document.createElement("img");
         imgElement.id = cardId;
-        imgElement.src = image;
+        imgElement.src = "images/cardback.jpg";
         imgElement.setAttribute("class", "card my_card");
         document.getElementById("my_battlefield").appendChild(imgElement);
 
         $("#" + cardId).css("top", 20);
         $("#" + cardId).css("left", 140);
+        $("#" + cardId).css("z-index", 10);
 
-        cardEntry = {
-          imgSrc : "images/cardback.jpg",
+        var cardEntry = {
+          imgSrc : image,
           zone : ZoneEnum.LIBRARY,
+          faceUp : false,
           tapped : false,
-          faceDown : true,
           flipped : false,
           transformed : false,
           numCounters : 0
         };
+
         g_directory.push(cardEntry);
         g_library.push(cardId);
       }
 
-      function moveCardToZone() {
+      function moveCardToZone(cardId, toZone, shiftHeld) {
+
+        // check if we need to actually do anything
+        var fromZone = g_directory[cardId].zone;
+        if (fromZone == toZone) {
+          return;
+        }
+
+        // remove card from its old zone array
+        var pos;
+        switch(fromZone) {
+
+          case ZoneEnum.BATTLEFIELD:
+            // do nothing
+            break;
+
+          case ZoneEnum.HAND:
+            pos = g_hand.indexOf(cardId);
+            g_hand.splice(pos, 1);
+            break;
+
+          case ZoneEnum.LIBRARY:
+            pos = g_library.indexOf(cardId);
+            g_library.splice(pos, 1);
+            break;
+
+          case ZoneEnum.GRAVEYARD:
+            pos = g_graveyard.indexOf(cardId);
+            g_graveyard.splice(pos, 1);
+            break;
+
+          case ZoneEnum.EXILE:
+            pos = g_exile.indexOf(cardId);
+            g_exile.splice(pos, 1);
+            break;
+        }
+
+        // switch on dest zone, then add to new array
+        var turnFaceUp;
+        switch(toZone) {
+
+          case ZoneEnum.BATTLEFIELD:
+            turnFaceUp = !shiftHeld;
+            break;
+
+          case ZoneEnum.HAND:
+            g_hand.push(cardId);
+            turnFaceUp = true;
+            break;
+
+          case ZoneEnum.LIBRARY:
+            g_library.push(cardId);
+            turnFaceUp = false;
+            break;
+
+          case ZoneEnum.GRAVEYARD:
+            g_graveyard.push(cardId);
+            turnFaceUp = true;
+            break;
+
+          case ZoneEnum.EXILE:
+            g_exile.push(cardId);
+            turnFaceUp = !shiftHeld;
+            break;
+        }
+
+        // update directory
+        g_directory[cardId].zone = toZone;
+        g_directory[cardId].tapped = false;
+        g_directory[cardId].flipped = false;
+        g_directory[cardId].transformed = false;
+        g_directory[cardId].numCounters = 0;
+
+        // toggle face up/down as appropriate
+        if (g_directory[cardId].faceUp && !turnFaceUp) {
+          turnCardFaceDown(cardId);
+        }
+        else if (!g_directory[cardId].faceUp && turnFaceUp) {
+          turnCardFaceUp(cardId);
+        }
+
+        // refresh display on both to/from zones
+
+        // notify other client of state change
       }
 
-      function displayLibrary() {
+      function turnCardFaceUp(cardId) {
+        $("#" + cardId).attr("src", g_directory[cardId].imgSrc);
+        g_directory[cardId].faceUp = true;
       }
 
-      function displayGraveyard() {
+      function turnCardFaceDown(cardId) {
+        $("#" + cardId).attr("src", "images/cardback.jpg");
+        g_directory[cardId].faceUp = false;
       }
 
-      function displayExile() {
+      function refreshLibrary() {
       }
 
-      function displayHand() {
+      function refreshGraveyard() {
+      }
+
+      function refreshExile() {
+      }
+
+      function refreshHand() {
       }
 
 
@@ -141,6 +236,8 @@
         window.g_exile = [];
         window.g_hand = [];
 
+        window.g_shift = false;
+
 
 
         generateCard(0, "images/forest.jpg");
@@ -152,13 +249,13 @@
                                   snapTolerance: 65});
 
 
-        $("#window").droppable({
+        $("#battlefield_wrapper").droppable({
           accept: ".my_card",
           drop: function( event, ui ) {
-
-            // why doesn't think work?
-            ui.draggable.src = "images/cardback.jpg"
-            ui.draggable.height = "200"
+            var cardId = parseInt(ui.draggable.attr("id"));
+            moveCardToZone(cardId,
+                           ZoneEnum.BATTLEFIELD,
+                           g_shift);
           }
         });
         
@@ -166,8 +263,10 @@
           accept: ".my_card",
           greedy: true,
           drop: function( event, ui ) {
-            // hand drag code
-
+            var cardId = parseInt(ui.draggable.attr("id"));
+            moveCardToZone(cardId,
+                           ZoneEnum.HAND,
+                           g_shift);
           }
         });
 
@@ -175,8 +274,10 @@
           accept: ".my_card",
           greedy: true,
           drop: function( event, ui ) {
-            // lib drag code
-
+            var cardId = parseInt(ui.draggable.attr("id"));
+            moveCardToZone(cardId,
+                           ZoneEnum.LIBRARY,
+                           g_shift);
           }
         });
 
@@ -184,8 +285,10 @@
           accept: ".my_card",
           greedy: true,
           drop: function( event, ui ) {
-            // graveyard drag code
-
+            var cardId = parseInt(ui.draggable.attr("id"));
+            moveCardToZone(cardId,
+                           ZoneEnum.GRAVEYARD,
+                           g_shift);
           }
         });
 
@@ -193,8 +296,28 @@
           accept: ".my_card",
           greedy: true,
           drop: function( event, ui ) {
-            // exile drag code
+            var cardId = parseInt(ui.draggable.attr("id"));
+            moveCardToZone(cardId,
+                           ZoneEnum.EXILE,
+                           g_shift);
+          }
+        });
 
+        $("body").on("keydown", function(e) {
+          var key = e.which;
+          switch(key) {
+            case 16: // 'shift'
+              g_shift = true;
+              break;
+          }
+        });
+
+        $("body").on("keyup", function(e) {
+          var key = e.which;
+          switch(key) {
+            case 16: // 'shift'
+              g_shift = false;
+              break;
           }
         });
 
