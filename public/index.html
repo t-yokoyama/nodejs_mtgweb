@@ -30,8 +30,8 @@
       }
 
       div#battlefield_wrapper {
-        top: 130px;
-        bottom: 130px;
+        top: 0px;
+        bottom: 0px;
         left: 0px;
         right: 0px;
         position: absolute;
@@ -52,8 +52,12 @@
         width: 100px;
         position: absolute;
         padding: 0px;
-        border: 1px;
+        border-width: 1px;
         border-style: dashed;
+      }
+
+      div.zone_hover {
+        outline: 4px solid #ff0000;
       }
 
       div#library { top: 20px; left: 140px; }
@@ -71,6 +75,11 @@
         height: 130px;
         width: 100px;
         position: absolute;
+        border: 0px;
+      }
+
+      img.card_hover {
+        outline: 2px solid #00ff00;
       }
 
     </style>
@@ -107,11 +116,19 @@
 
       function moveCardToZone(cardId, toZone, shiftHeld) {
 
-        // check if we need to actually do anything
+        // update card position (regardless of zone change)
+        updateCardPosition(cardId, toZone);
+
+        // check if we need to actually do anything else
         var fromZone = g_directory[cardId].zone;
         if (fromZone == toZone) {
           return;
         }
+
+        var refHand = false;
+        var refLibrary = false;
+        var refGraveyard = false;
+        var refExile = false;
 
         // remove card from its old zone array
         var pos;
@@ -124,21 +141,25 @@
           case ZoneEnum.HAND:
             pos = g_hand.indexOf(cardId);
             g_hand.splice(pos, 1);
+            refHand = true;
             break;
 
           case ZoneEnum.LIBRARY:
             pos = g_library.indexOf(cardId);
             g_library.splice(pos, 1);
+            refLibrary = true;
             break;
 
           case ZoneEnum.GRAVEYARD:
             pos = g_graveyard.indexOf(cardId);
             g_graveyard.splice(pos, 1);
+            refGraveyard = true;
             break;
 
           case ZoneEnum.EXILE:
             pos = g_exile.indexOf(cardId);
             g_exile.splice(pos, 1);
+            refExile = true;
             break;
         }
 
@@ -153,21 +174,25 @@
           case ZoneEnum.HAND:
             g_hand.push(cardId);
             turnFaceUp = true;
+            refHand = true;
             break;
 
           case ZoneEnum.LIBRARY:
             g_library.push(cardId);
             turnFaceUp = false;
+            refLibrary = true;
             break;
 
           case ZoneEnum.GRAVEYARD:
             g_graveyard.push(cardId);
             turnFaceUp = true;
+            refGraveyard = true;
             break;
 
           case ZoneEnum.EXILE:
             g_exile.push(cardId);
             turnFaceUp = !shiftHeld;
+            refExile = true;
             break;
         }
 
@@ -187,8 +212,55 @@
         }
 
         // refresh display on both to/from zones
+        if (refHand) {
+          refreshHand();
+        }
+        if (refLibrary) {
+          refreshLibrary();
+        }
+        if (refGraveyard) {
+          refreshGraveyard();
+        }
+        if (refExile) {
+          refreshExile();
+        }
 
-        // notify other client of state change
+        // FIXME notify other client of state change
+      }
+
+      function updateCardPosition(cardId, toZone) {
+
+        $card = $("#" + cardId);
+        switch(toZone) {
+
+          case ZoneEnum.HAND:
+            $card.css("top", "auto");
+            $card.css("bottom", $("#hand").css("bottom"));
+            $card.css("left", "0px");
+            $card.css("right", "auto");
+            break;
+
+          case ZoneEnum.LIBRARY:
+            $card.css("top", $("#library").css("top"));
+            $card.css("bottom", "auto");
+            $card.css("left", $("#library").css("left"));
+            $card.css("right", "auto");
+            break;
+
+          case ZoneEnum.GRAVEYARD:
+            $card.css("top", $("#graveyard").css("top"));
+            $card.css("bottom", "auto");
+            $card.css("left", $("#graveyard").css("left"));
+            $card.css("right", "auto");
+            break;
+
+          case ZoneEnum.EXILE:
+            $card.css("top", $("#exile").css("top"));
+            $card.css("bottom", "auto");
+            $card.css("left", "auto");
+            $card.css("right", $("#exile").css("right"));
+            break;
+        }
       }
 
       function turnCardFaceUp(cardId) {
@@ -202,12 +274,39 @@
       }
 
       function refreshLibrary() {
+        var numCards = g_library.length;
+        for (var i = 0; i < numCards; i++) {
+          if (i == numCards - 1) {
+            $("#" + g_library[i]).show()
+          }
+          else {
+            $("#" + g_library[i]).hide()
+          }
+        }
       }
 
       function refreshGraveyard() {
+        var numCards = g_graveyard.length;
+        for (var i = 0; i < numCards; i++) {
+          if (i == numCards - 1) {
+            $("#" + g_graveyard[i]).show()
+          }
+          else {
+            $("#" + g_graveyard[i]).hide()
+          }
+        }
       }
 
       function refreshExile() {
+        var numCards = g_exile.length;
+        for (var i = 0; i < numCards; i++) {
+          if (i == numCards - 1) {
+            $("#" + g_exile[i]).show()
+          }
+          else {
+            $("#" + g_exile[i]).hide()
+          }
+        }
       }
 
       function refreshHand() {
@@ -240,13 +339,25 @@
 
 
 
-        generateCard(0, "images/forest.jpg");
-        generateCard(1, "images/seraph_of_dawn.jpg");
+        generateCard(0, "images/seraph_of_dawn.jpg");
+        generateCard(1, "images/wild_hunger.jpg");
+        generateCard(2, "images/myr_sire.jpg");
+        generateCard(3, "images/affa_guard_hound.jpg");
+        generateCard(4, "images/lightning_bolt.jpg");
+        generateCard(5, "images/resounding_wave.jpg");
+        generateCard(6, "images/forest.jpg");
+
+
+
+        $(".card").hover(
+          function() {$(this).addClass("card_hover");},
+          function() {$(this).removeClass("card_hover");}
+          );
 
         $(".my_card").draggable({ // grid: [20, 20],
                                   snap: ".zone",
                                   snapMode: "inner",
-                                  snapTolerance: 65});
+                                  snapTolerance: 10});
 
 
         $("#battlefield_wrapper").droppable({
@@ -262,6 +373,7 @@
         $("#hand").droppable({
           accept: ".my_card",
           greedy: true,
+          hoverClass: "zone_hover",
           drop: function( event, ui ) {
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
@@ -273,6 +385,7 @@
         $("#library").droppable({
           accept: ".my_card",
           greedy: true,
+          hoverClass: "zone_hover",
           drop: function( event, ui ) {
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
@@ -284,6 +397,7 @@
         $("#graveyard").droppable({
           accept: ".my_card",
           greedy: true,
+          hoverClass: "zone_hover",
           drop: function( event, ui ) {
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
@@ -295,6 +409,7 @@
         $("#exile").droppable({
           accept: ".my_card",
           greedy: true,
+          hoverClass: "zone_hover",
           drop: function( event, ui ) {
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
@@ -358,9 +473,9 @@
           <div class="zone" id="library">library</div>
           <div class="zone" id="graveyard">graveyard</div>
           <div class="zone" id="exile">exile</div>
+          <div class="zone" id="hand">hand</div>
         </div>
       </div>
-      <div class="zone" id="hand">hand</div>
     </div>
 
 <!--

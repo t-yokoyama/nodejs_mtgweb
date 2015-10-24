@@ -15,41 +15,36 @@ TODO
  x figure out how to set the x/y pos of a card via button/action
    - http://api.jquery.com/offset/ (.offset(x, y);)
  x figure out how to set draggable/offset without manually naming specific id
+ x use GIT
+ x figure out how to split the remaining height with percentages after a fixed width object
+   - http://jsfiddle.net/CZt36/15/
+ x figure out why re-setting an img's .src doesn't work
+ x see about holding shift to move cards face down to battlefield/exile
+   - http://jsbin.com/redamohoji/edit?html,js,output
+ x implement moveCardToZone()
 
- - use GIT!!
+ - implement refreshX functions
+ - make it highlight the zone when a card is dragged over it such that it will be successfully dropped
+ - figure out an elegant solution to the z-index problem
+   - update the refreshX functions to also show the second from top card, and set the z-index for the top two appropriately
 
- - think of data structures/functions necessary for creating/maintaining cards in each zone
+ - implement click to tap:
+   - http://stackoverflow.com/questions/20061774/rotate-an-image-in-image-source-in-html
 
-   - cards: array with cardId, srcImage, enum state, bool tapped
-   - library: ordered array with cardId's
-   - hand: is this necessary?
-   - graveyard: is this necessary?
-   - exile: is this necessary?
-
-   - enum state:
-     DECK
-     HAND
-     BATTLEFIELD
-     BATTLEFIELD_FACEDOWN
-     BATTLEFIELD_TRANSFORMED
-     BATTLEFIELD_FLIPPED
-     GRAVEYARD
-     EXILE
-
-   - addCard(): adds <img> to DOM, initially draws image face down
-   - revealCard(): redraws image face up
-
-
-
- - figure out how to load card data from a database
-
-
- - figure out how to change depth ordering of cards
- - implement a status variable? (e.g. boolean tapped)
  - figure out how to do a right-click menu
    - http://www.sitepoint.com/building-custom-right-click-context-menu-javascript/
- - figure out how to spawn a card on the fly (with all features, e.g. draggable)
- - see if jquery can do any of the above
+ - lighten the color of exiled cards
+ - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
+ - set drag limit to end of page
+ - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
+
+ - mouse hover selection? (outline with color)
+   - keyboard shortcuts for moveToXZone?
+ - group (battlefield only) selection with mouse?
+
+
+
+
 
 
  - ? decide how to animate transitions from opponent
@@ -57,55 +52,5 @@ TODO
  - ? learn how to incorporate databases into nodejs server
 
 
-
-
-
-
-
-
-
-FEATURE LIST
-  ZONES
-   - battlefield
-   - hand
-   - library
-   - graveyard
-   - exile
-   - card info section
-   - game info section (life totals, turn #, etc)
-   - chat window
-  FEATURES
-   * right click menu possible?
-   - drag card
-   - tap card
-   - stack card (aura)
-   - flip card (transform, morphs, kamigawa flip)
-   - draw card
-   - shuffle deck
-
-CODE SNIPPETS
-
-
-<!DOCTYPE html>
-<html>
-<body>
-
-<p>Canvas:</p>
-<canvas id="myCanvas" width="220" height="277" style="border:2px solid #222222;">
-Your browser does not support the HTML5 canvas tag.
-</canvas>
-
-<script>
-window.onload = function() {
-    var c = document.getElementById("myCanvas");
-    var ctx = c.getContext("2d");
-    var img = new Image();
-    img.src = 'img_the_scream.jpg';
-    ctx.drawImage(img, 0, 0);
-}
-</script>
-
-</body>
-</html>
 
 
