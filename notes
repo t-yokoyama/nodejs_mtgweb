@@ -26,11 +26,10 @@ TODO
  x implement refreshX functions
  x lighten the color of exiled cards
    - http://stackoverflow.com/questions/9057471/brighten-images-from-dark-to-light-on-hover
-
- - figure out an elegant solution to the z-index problem
-   - update the refreshX functions to also show the second from top card, and set the z-index for the top two appropriately
-   - bring the mouse focus card to the top
-
+ x figure out an elegant solution to the z-index problem
+   x update the refreshX functions to also show the second from top card, and set the z-index for the top two appropriately
+   x bring the mouse focus card to the top
+ x set drag limit to end of page
 
 
 
@@ -42,7 +41,6 @@ TODO
  - figure out how to do a right-click menu
    - http://www.sitepoint.com/building-custom-right-click-context-menu-javascript/
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
- - set drag limit to end of page
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
  - prevent card borders from getting grayscaled by filters
 

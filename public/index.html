@@ -89,7 +89,6 @@
 
       img.card_hover {
         outline: 2px solid #ffff00;
-        z-index: 1000; /* FIXME */
       }
 
     </style>
@@ -106,7 +105,7 @@
         imgElement.setAttribute("class", "card my_card");
         document.getElementById("my_battlefield").appendChild(imgElement);
 
-        $card = $("#" + cardId);
+        var $card = $("#" + cardId);
         updateCardPosition($card, ZoneEnum.LIBRARY);
         $card.css("z-index", 10);
 
@@ -126,7 +125,7 @@
 
       function moveCardToZone(cardId, toZone, shiftHeld) {
 
-        $card = $("#" + cardId);
+        var $card = $("#" + cardId);
 
         // update card position (regardless of zone change)
         updateCardPosition($card, toZone);
@@ -286,37 +285,61 @@
       }
 
       function refreshLibrary() {
+        var offset = $("#library").offset();
+        var z = offset.top * ZWIDTH + offset.left;
         var numCards = g_library.length;
         for (var i = 0; i < numCards; i++) {
+          var $card = $("#" + g_library[i]);
           if (i == numCards - 1) {
-            $("#" + g_library[i]).show()
+            $card.show()
+            $card.css("zIndex", z);
+          }
+          else if (i == numCards - 2) {
+            $card.show()
+            $card.css("zIndex", z - 1);
           }
           else {
-            $("#" + g_library[i]).hide()
+            $card.hide()
           }
         }
       }
 
       function refreshGraveyard() {
+        var offset = $("#graveyard").offset();
+        var z = offset.top * ZWIDTH + offset.left;
         var numCards = g_graveyard.length;
         for (var i = 0; i < numCards; i++) {
+          var $card = $("#" + g_graveyard[i]);
           if (i == numCards - 1) {
-            $("#" + g_graveyard[i]).show()
+            $card.show()
+            $card.css("zIndex", z);
+          }
+          else if (i == numCards - 2) {
+            $card.show()
+            $card.css("zIndex", z - 1);
           }
           else {
-            $("#" + g_graveyard[i]).hide()
+            $card.hide()
           }
         }
       }
 
       function refreshExile() {
+        var offset = $("#exile").offset();
+        var z = offset.top * ZWIDTH + offset.left;
         var numCards = g_exile.length;
         for (var i = 0; i < numCards; i++) {
+          var $card = $("#" + g_exile[i]);
           if (i == numCards - 1) {
-            $("#" + g_exile[i]).show()
+            $card.show()
+            $card.css("zIndex", z);
+          }
+          else if (i == numCards - 2) {
+            $card.show()
+            $card.css("zIndex", z - 1);
           }
           else {
-            $("#" + g_exile[i]).hide()
+            $card.hide()
           }
         }
       }
@@ -326,7 +349,7 @@
         var numCards = g_hand.length;
         var totalWidth = $("#hand").width() - 100;
         for (var i = 0; i < numCards; i++) {
-          $card = $("#" + g_hand[i]);
+          var $card = $("#" + g_hand[i]);
           $card.css("left", Math.floor(i * Math.min(totalWidth / (numCards - 1), 100)));
         }
       }
@@ -347,6 +370,9 @@
           GRAVEYARD : 4,
           EXILE : 5
         };
+
+        window.ZTOP = 100000000;
+        window.ZWIDTH = 10000;
 
         window.g_directory = [];
         window.g_library = [];
@@ -379,14 +405,21 @@
 
 
         $(".card").hover(
-          function() {$(this).addClass("card_hover");},
-          function() {$(this).removeClass("card_hover");}
-          );
+          function() {
+            $(this).addClass("card_hover");
+            $(this).css("zIndex", ZTOP);
+          },
+          function() {
+            $(this).removeClass("card_hover");
+            var offset = $(this).offset();
+            $(this).css("zIndex", offset.top * ZWIDTH + offset.left);
+          });
 
-        $(".my_card").draggable({ // grid: [20, 20],
+        $(".my_card").draggable({ grid: [5, 20],
                                   snap: ".zone",
                                   snapMode: "inner",
-                                  snapTolerance: 10});
+                                  snapTolerance: 10,
+                                  containment: "#battlefield_wrapper"});
 
 
         $("#battlefield_wrapper").droppable({
