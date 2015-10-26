@@ -22,23 +22,31 @@ TODO
  x see about holding shift to move cards face down to battlefield/exile
    - http://jsbin.com/redamohoji/edit?html,js,output
  x implement moveCardToZone()
+ x make it highlight the zone when a card is dragged over it such that it will be successfully dropped.
+ x implement refreshX functions
+ x lighten the color of exiled cards
+   - http://stackoverflow.com/questions/9057471/brighten-images-from-dark-to-light-on-hover
 
- - implement refreshX functions
- - make it highlight the zone when a card is dragged over it such that it will be successfully dropped
  - figure out an elegant solution to the z-index problem
    - update the refreshX functions to also show the second from top card, and set the z-index for the top two appropriately
+   - bring the mouse focus card to the top
+
+
+
+
+
+
 
  - implement click to tap:
    - http://stackoverflow.com/questions/20061774/rotate-an-image-in-image-source-in-html
-
  - figure out how to do a right-click menu
    - http://www.sitepoint.com/building-custom-right-click-context-menu-javascript/
- - lighten the color of exiled cards
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - set drag limit to end of page
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
+ - prevent card borders from getting grayscaled by filters
 
- - mouse hover selection? (outline with color)
+ x mouse hover selection? (outline with color)
    - keyboard shortcuts for moveToXZone?
  - group (battlefield only) selection with mouse?
 
@@ -52,5 +60,10 @@ TODO
  - ? learn how to incorporate databases into nodejs server
 
 
+filter: brightness(2.5);
+-webkit-filter: brightness(2.5);
+-moz-filter: brightness(2.5);
+-ms-filter: brightness(2.5);
+-o-filter: brightness(2.5);
 
 

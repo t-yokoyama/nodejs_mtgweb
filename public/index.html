@@ -78,8 +78,18 @@
         border: 0px;
       }
 
+      img.card_exiled {
+        filter: gray;
+        filter: grayscale(100%) brightness(50%);
+        -webkit-filter: grayscale(100%) brightness(50%);
+        -moz-filter: grayscale(100%) brightness(50%);
+        -ms-filter: grayscale(100%) brightness(50%);
+        -o-filter: grayscale(100%) brightness(50%);
+      }
+
       img.card_hover {
-        outline: 2px solid #00ff00;
+        outline: 2px solid #ffff00;
+        z-index: 1000; /* FIXME */
       }
 
     </style>
@@ -96,9 +106,9 @@
         imgElement.setAttribute("class", "card my_card");
         document.getElementById("my_battlefield").appendChild(imgElement);
 
-        $("#" + cardId).css("top", 20);
-        $("#" + cardId).css("left", 140);
-        $("#" + cardId).css("z-index", 10);
+        $card = $("#" + cardId);
+        updateCardPosition($card, ZoneEnum.LIBRARY);
+        $card.css("z-index", 10);
 
         var cardEntry = {
           imgSrc : image,
@@ -116,12 +126,21 @@
 
       function moveCardToZone(cardId, toZone, shiftHeld) {
 
+        $card = $("#" + cardId);
+
         // update card position (regardless of zone change)
-        updateCardPosition(cardId, toZone);
+        updateCardPosition($card, toZone);
 
         // check if we need to actually do anything else
         var fromZone = g_directory[cardId].zone;
         if (fromZone == toZone) {
+
+          // if we're about to abort, and there's a possibility that
+          // the user moved a 'hand' card around, refresh the hand 
+          if (toZone == ZoneEnum.HAND) {
+            refreshHand();
+          }
+
           return;
         }
 
@@ -159,6 +178,7 @@
           case ZoneEnum.EXILE:
             pos = g_exile.indexOf(cardId);
             g_exile.splice(pos, 1);
+            $card.removeClass("card_exiled");
             refExile = true;
             break;
         }
@@ -192,6 +212,7 @@
           case ZoneEnum.EXILE:
             g_exile.push(cardId);
             turnFaceUp = !shiftHeld;
+            $card.addClass("card_exiled");
             refExile = true;
             break;
         }
@@ -205,10 +226,12 @@
 
         // toggle face up/down as appropriate
         if (g_directory[cardId].faceUp && !turnFaceUp) {
-          turnCardFaceDown(cardId);
+          $card.attr("src", "images/cardback.jpg");
+          g_directory[cardId].faceUp = false;
         }
         else if (!g_directory[cardId].faceUp && turnFaceUp) {
-          turnCardFaceUp(cardId);
+          $card.attr("src", g_directory[cardId].imgSrc);
+          g_directory[cardId].faceUp = true;
         }
 
         // refresh display on both to/from zones
@@ -228,9 +251,8 @@
         // FIXME notify other client of state change
       }
 
-      function updateCardPosition(cardId, toZone) {
+      function updateCardPosition($card, toZone) {
 
-        $card = $("#" + cardId);
         switch(toZone) {
 
           case ZoneEnum.HAND:
@@ -261,16 +283,6 @@
             $card.css("right", $("#exile").css("right"));
             break;
         }
-      }
-
-      function turnCardFaceUp(cardId) {
-        $("#" + cardId).attr("src", g_directory[cardId].imgSrc);
-        g_directory[cardId].faceUp = true;
-      }
-
-      function turnCardFaceDown(cardId) {
-        $("#" + cardId).attr("src", "images/cardback.jpg");
-        g_directory[cardId].faceUp = false;
       }
 
       function refreshLibrary() {
@@ -310,6 +322,13 @@
       }
 
       function refreshHand() {
+        // fixme make this overlap cards even if any would go offscreen
+        var numCards = g_hand.length;
+        var totalWidth = $("#hand").width() - 100;
+        for (var i = 0; i < numCards; i++) {
+          $card = $("#" + g_hand[i]);
+          $card.css("left", Math.floor(i * Math.min(totalWidth / (numCards - 1), 100)));
+        }
       }
 
 
@@ -347,6 +366,16 @@
         generateCard(5, "images/resounding_wave.jpg");
         generateCard(6, "images/forest.jpg");
 
+        generateCard(7, "images/affa_guard_hound.jpg");
+        generateCard(8, "images/lightning_bolt.jpg");
+        generateCard(9, "images/resounding_wave.jpg");
+        generateCard(10, "images/seraph_of_dawn.jpg");
+        generateCard(11, "images/wild_hunger.jpg");
+        generateCard(12, "images/myr_sire.jpg");
+        generateCard(13, "images/affa_guard_hound.jpg");
+        generateCard(14, "images/lightning_bolt.jpg");
+        generateCard(15, "images/resounding_wave.jpg");
+        generateCard(16, "images/forest.jpg");
 
 
         $(".card").hover(
