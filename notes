@@ -1,5 +1,6 @@
 
 TODO
+
  x 1 learn nodejs/express server framework
  x 2 learn socketio for sending events between browsers
  x 3 learn canvas for drawing magic cards
@@ -49,6 +50,10 @@ TODO
  - group (battlefield only) selection with mouse?
 
 
+ - research reasons to use jquery selector $("#blah") vs document.querySelector("#blah")
+   - https://jsperf.com/jquery-vs-document-queryselector
+ - store a handle to each card element in g_directory to avoid "#" + ID string slowness
+ - == vs ===
 
 
 

@@ -91,6 +91,12 @@
         outline: 2px solid #ffff00;
       }
 
+      nav#cardmenu {
+        display: none;
+        position: absolute;
+        z-index: 100000010;
+      }
+
     </style>
 
 
@@ -121,6 +127,7 @@
 
         g_directory.push(cardEntry);
         g_library.push(cardId);
+
       }
 
       function moveCardToZone(cardId, toZone, shiftHeld) {
@@ -345,15 +352,47 @@
       }
 
       function refreshHand() {
-        // fixme make this overlap cards even if any would go offscreen
+        var offset = $("#hand").offset();
+        var zbase = offset.top * ZWIDTH;
         var numCards = g_hand.length;
         var totalWidth = $("#hand").width() - 100;
         for (var i = 0; i < numCards; i++) {
           var $card = $("#" + g_hand[i]);
-          $card.css("left", Math.floor(i * Math.min(totalWidth / (numCards - 1), 100)));
+          var left = Math.floor(i * Math.min(totalWidth / (numCards - 1), 100));
+          $card.css("left", left);
+          $card.css("zIndex", zbase + left);
         }
       }
 
+      function toggleCardMenuOn() {
+        if (!g_cardMenuActive) {
+          g_cardMenuActive = true;
+          $("#cardmenu").show();
+        }
+      }
+
+      function toggleCardMenuOff() {
+        if (g_cardMenuActive) {
+          g_cardMenuActive = false;
+          $("#cardmenu").hide();
+        }
+      }
+
+      function clickInsideElement(e, className) {
+        var el = e.srcElement || e.target; // for browser compatibility
+        if (el.classList.contains(className)) {
+          return el;
+        }
+        else {
+          while (el = el.parentNode) {
+            if (el.classList && el.classList.contains(className)) {
+              return true;
+            }
+          }
+        }
+
+        return false;
+      }
 
 
 
@@ -380,7 +419,8 @@
         window.g_exile = [];
         window.g_hand = [];
 
-        window.g_shift = false;
+        window.g_shiftHeld = false;
+        window.g_cardMenuActive = false;
 
 
 
@@ -401,8 +441,11 @@
         generateCard(13, "images/affa_guard_hound.jpg");
         generateCard(14, "images/lightning_bolt.jpg");
         generateCard(15, "images/resounding_wave.jpg");
-        generateCard(16, "images/forest.jpg");
-
+        
+        generateCard(16, "images/forest_full.jpg");
+        generateCard(17, "images/island_full.jpg");
+        generateCard(18, "images/mountain_full.jpg");
+        generateCard(19, "images/forest_full.jpg");
 
         $(".card").hover(
           function() {
@@ -428,7 +471,7 @@
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
                            ZoneEnum.BATTLEFIELD,
-                           g_shift);
+                           g_shiftHeld);
           }
         });
         
@@ -440,7 +483,7 @@
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
                            ZoneEnum.HAND,
-                           g_shift);
+                           g_shiftHeld);
           }
         });
 
@@ -452,7 +495,7 @@
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
                            ZoneEnum.LIBRARY,
-                           g_shift);
+                           g_shiftHeld);
           }
         });
 
@@ -464,7 +507,7 @@
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
                            ZoneEnum.GRAVEYARD,
-                           g_shift);
+                           g_shiftHeld);
           }
         });
 
@@ -476,27 +519,49 @@
             var cardId = parseInt(ui.draggable.attr("id"));
             moveCardToZone(cardId,
                            ZoneEnum.EXILE,
-                           g_shift);
+                           g_shiftHeld);
           }
         });
 
-        $("body").on("keydown", function(e) {
+        window.onkeydown = function(e) {
           var key = e.which;
           switch(key) {
             case 16: // 'shift'
-              g_shift = true;
+              g_shiftHeld = true;
               break;
+          }
+        }
+
+        window.onkeyup = function(e) {
+          var key = e.which;
+          switch(key) {
+            case 16: // 'shift'
+              g_shiftHeld = false;
+              break;
+            case 27: // 'esc'
+              toggleCardMenuOff();
+              break;
+          }
+        }
+
+        document.addEventListener("click", function(e) {
+          var button = e.which || e.button;
+          if (button === 1) {
+            toggleCardMenuOff();
           }
         });
 
-        $("body").on("keyup", function(e) {
-          var key = e.which;
-          switch(key) {
-            case 16: // 'shift'
-              g_shift = false;
-              break;
+        document.addEventListener("contextmenu", function(e) {
+          if (clickInsideElement(e, "my_card")) {
+            e.preventDefault();
+            toggleCardMenuOn();
+          } else {
+            toggleCardMenuOff();
           }
         });
+
+
+
 
 
 
@@ -558,6 +623,29 @@
       });
     </script>
 -->
+
+
+
+    <nav id="cardmenu">
+      <ul class="cardmenu_items">
+        <li class="cardmenu_item">
+          <a href="#" class="cardmenu_link">
+            <i class="fa"></i> right click menu item 1
+          </a>
+        </li>
+        <li class="cardmenu_item">
+          <a href="#" class="cardmenu_link">
+            <i class="fa"></i> right click menu item 2
+          </a>
+        </li>
+        <li class="cardmenu_item">
+          <a href="#" class="cardmenu_link">
+            <i class="fa"></i> right click menu item 3
+          </a>
+        </li>
+      </ul>
+    </nav>
+
 
 
 
