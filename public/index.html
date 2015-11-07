@@ -3,9 +3,14 @@
   <head>
     <title>MTG web</title>
 
+
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+    <script src="bootstrap-contextmenu.js"></script>
 
     <style>
 
@@ -91,11 +96,6 @@
         outline: 2px solid #ffff00;
       }
 
-      nav#cardmenu {
-        display: none;
-        position: absolute;
-        z-index: 100000010;
-      }
 
     </style>
 
@@ -108,12 +108,14 @@
         var imgElement = document.createElement("img");
         imgElement.id = cardId;
         imgElement.src = "images/cardback.jpg";
-        imgElement.setAttribute("class", "card my_card");
+        imgElement.setAttribute("class", "card my_card rcmenu_target");
+        imgElement.setAttribute("data-toggle", "context");
+
         document.getElementById("my_battlefield").appendChild(imgElement);
 
         var $card = $("#" + cardId);
         updateCardPosition($card, ZoneEnum.LIBRARY);
-        $card.css("z-index", 10);
+        $card.css("z-index", 10); // FIXME
 
         var cardEntry = {
           imgSrc : image,
@@ -364,37 +366,16 @@
         }
       }
 
-      function toggleCardMenuOn() {
-        if (!g_cardMenuActive) {
-          g_cardMenuActive = true;
-          $("#cardmenu").show();
-        }
+      function highlightCard($card) {
+        $card.addClass("card_hover");
+        $card.css("zIndex", ZTOP);
       }
 
-      function toggleCardMenuOff() {
-        if (g_cardMenuActive) {
-          g_cardMenuActive = false;
-          $("#cardmenu").hide();
-        }
+      function unhighlightCard($card) {
+        $card.removeClass("card_hover");
+        var offset = $card.offset();
+        $card.css("zIndex", offset.top * ZWIDTH + offset.left);
       }
-
-      function clickInsideElement(e, className) {
-        var el = e.srcElement || e.target; // for browser compatibility
-        if (el.classList.contains(className)) {
-          return el;
-        }
-        else {
-          while (el = el.parentNode) {
-            if (el.classList && el.classList.contains(className)) {
-              return true;
-            }
-          }
-        }
-
-        return false;
-      }
-
-
 
 
 
@@ -420,7 +401,8 @@
         window.g_hand = [];
 
         window.g_shiftHeld = false;
-        window.g_cardMenuActive = false;
+        window.g_rcmenuActive = false;
+        window.g_rcCard;
 
 
 
@@ -446,17 +428,6 @@
         generateCard(17, "images/island_full.jpg");
         generateCard(18, "images/mountain_full.jpg");
         generateCard(19, "images/forest_full.jpg");
-
-        $(".card").hover(
-          function() {
-            $(this).addClass("card_hover");
-            $(this).css("zIndex", ZTOP);
-          },
-          function() {
-            $(this).removeClass("card_hover");
-            var offset = $(this).offset();
-            $(this).css("zIndex", offset.top * ZWIDTH + offset.left);
-          });
 
         $(".my_card").draggable({ grid: [5, 20],
                                   snap: ".zone",
@@ -538,62 +509,51 @@
             case 16: // 'shift'
               g_shiftHeld = false;
               break;
-            case 27: // 'esc'
-              toggleCardMenuOff();
-              break;
           }
         }
 
-        document.addEventListener("click", function(e) {
-          var button = e.which || e.button;
-          if (button === 1) {
-            toggleCardMenuOff();
+        $(".card").hover(
+          function() {
+            if (!g_rcmenuActive) {
+              highlightCard($(this));
+            }
+          },
+          function() {
+            if (!g_rcmenuActive) {
+              unhighlightCard($(this));
+            }
+          });
+
+        $('.rcmenu_target').contextmenu({
+          target: '#card_rcmenu',
+          before: function (e, context) {
+            g_rcmenuActive = true;
+            g_rcCard = context;
+            highlightCard(g_rcCard);
+            
+//            this.getMenu().find("li").eq(2).find('a').html("This was dynamically changed");
+          },
+          onItem: function (context, e) {
+//            alert($(e.target).text());
           }
         });
 
-        document.addEventListener("contextmenu", function(e) {
-          if (clickInsideElement(e, "my_card")) {
-            e.preventDefault();
-            toggleCardMenuOn();
-          } else {
-            toggleCardMenuOff();
-          }
+        $('#card_rcmenu').on('hidden.bs.context', function (e) {
+          g_rcmenuActive = false;
+          unhighlightCard(g_rcCard);
         });
 
 
 
-
-
-
-
-/*
-        $("#button1").click(function() {
-          $("#card1").show();
-          $("#card1").offset({ top: 100, left: 100 });
-          $("#card2").show();
-          $("#card2").offset({ top: 100, left: 200 });
-        });
-
-        $("#button2").click(function() {
-          $("#card1").hide();
-          $("#card2").hide();
-        });
-*/
 
       });
-    </script>
 
+    </script>
   </head>
 
   <body>
 
-<!--
-    <button type="button" id="button1">reset cards</button>
-    <button type="button" id="button2">hide cards</button>
--->
-
     <div id="window">
-
       <div id="battlefield_wrapper">
         <div class="battlefield" id="opp_battlefield">opp battlefield</div>
         <div class="battlefield" id="my_battlefield">my battlefield
@@ -604,6 +564,18 @@
         </div>
       </div>
     </div>
+
+    <div id="card_rcmenu">
+      <ul class="dropdown-menu" role="menu">
+        <li><a tabindex="-1">Action</a></li>
+        <li><a tabindex="-1">Another action</a></li>
+        <li><a tabindex="-1">Something else here</a></li>
+        <li class="divider"></li>
+        <li><a tabindex="-1">Separated link</a></li>
+      </ul>
+    </div>
+
+
 
 <!--
     <ul id="messages"></ul>
@@ -623,29 +595,6 @@
       });
     </script>
 -->
-
-
-
-    <nav id="cardmenu">
-      <ul class="cardmenu_items">
-        <li class="cardmenu_item">
-          <a href="#" class="cardmenu_link">
-            <i class="fa"></i> right click menu item 1
-          </a>
-        </li>
-        <li class="cardmenu_item">
-          <a href="#" class="cardmenu_link">
-            <i class="fa"></i> right click menu item 2
-          </a>
-        </li>
-        <li class="cardmenu_item">
-          <a href="#" class="cardmenu_link">
-            <i class="fa"></i> right click menu item 3
-          </a>
-        </li>
-      </ul>
-    </nav>
-
 
 
 

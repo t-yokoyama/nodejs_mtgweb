@@ -34,13 +34,14 @@ TODO
 
 
 
-
-
+ x figure out how to do a right-click menu
+   x context.js
+   x keep selected card at max z-index while right click menu is engaged
+   - figure out how to conditionally gray out certain menu items
+   - write generic code to apply action specifically to the selected object
 
  - implement click to tap:
    - http://stackoverflow.com/questions/20061774/rotate-an-image-in-image-source-in-html
- - figure out how to do a right-click menu
-   - http://www.sitepoint.com/building-custom-right-click-context-menu-javascript/
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
  - prevent card borders from getting grayscaled by filters
@@ -54,7 +55,6 @@ TODO
    - https://jsperf.com/jquery-vs-document-queryselector
  - store a handle to each card element in g_directory to avoid "#" + ID string slowness
  - == vs ===
-
 
 
 
