@@ -31,46 +31,34 @@ TODO
    x update the refreshX functions to also show the second from top card, and set the z-index for the top two appropriately
    x bring the mouse focus card to the top
  x set drag limit to end of page
+ x mouse hover selection? (outline with color)
  x figure out how to do a right-click menu
    x keep selected card at max z-index while right click menu is engaged
  x implement click to tap:
    - http://stackoverflow.com/questions/20061774/rotate-an-image-in-image-source-in-html
    - http://www.the-art-of-web.com/css/css-animation/
-
- - fix the x/y weirdness with dragging a rotated image
+ x fix the x/y weirdness with dragging a rotated image
    - http://jsfiddle.net/bCUVp/1/
-   - prevent card borders from getting grayscaled by filters
-
+ x store a handle to each card element in g_directory to avoid "#" + ID string slowness
+ x replace == with ===
+   - http://stackoverflow.com/questions/359494/does-it-matter-which-equals-operator-vs-i-use-in-javascript-comparisons
 
 
 
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
-
  - figure out how to conditionally gray out certain rcmenu items
  - implement rcmenu actions
+ - keyboard shortcuts for moveToXZone?
 
- x mouse hover selection? (outline with color)
-   - keyboard shortcuts for moveToXZone?
-
-
+ - prevent card borders from getting grayscaled by filters
  - research reasons to use jquery selector $("#blah") vs document.querySelector("#blah")
    - https://jsperf.com/jquery-vs-document-queryselector
- - store a handle to each card element in g_directory to avoid "#" + ID string slowness
- - == vs ===
-   - http://stackoverflow.com/questions/359494/does-it-matter-which-equals-operator-vs-i-use-in-javascript-comparisons
 
 
 
  - ? decide how to animate transitions from opponent
  - ? make an internal database of cards (id, image...)
  - ? learn how to incorporate databases into nodejs server
-
-
-filter: brightness(2.5);
--webkit-filter: brightness(2.5);
--moz-filter: brightness(2.5);
--ms-filter: brightness(2.5);
--o-filter: brightness(2.5);
 
 

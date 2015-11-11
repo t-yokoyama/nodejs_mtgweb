@@ -3,7 +3,6 @@
   <head>
     <title>MTG web</title>
 
-
     <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
 
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -52,13 +51,13 @@
       div#opp_battlefield { background-color: #ccffcc; }
 
       div.zone {
-        background-color: #cccccc;
+        position: absolute;
         height: 130px;
         width: 100px;
-        position: absolute;
         padding: 0px;
         border-width: 1px;
         border-style: dashed;
+        background-color: #cccccc;
       }
 
       div.zone_hover {
@@ -70,17 +69,27 @@
       div#exile { top: 20px; right: 20px; }
 
       div#hand {
+        position: absolute;
         width: 100%;
         bottom: 0px;
-        position: absolute;
       }
 
-      img.card {
-        background-color: #aaaaaa;
+      div.cardhandle {
+        position: absolute;
         height: 130px;
         width: 100px;
-        position: absolute;
         border: 0px;
+        background-color: #666666; /* for debugging */
+      }
+
+      div.cardcanvas {
+        position: absolute;
+        height: 130px;
+        width: 100px;
+        border: 0px;
+        background-repeat: no-repeat;
+        background-size: 100px 130px;
+        background-color: #aaaaaa; /* for debugging */
         -webkit-transition-property: -webkit-transform;
         -moz-transition-property: -webkit-transform;
         -o-transition-property: -webkit-transform;
@@ -93,7 +102,7 @@
         transition-duration: 500ms;
       }
 
-      img.card_tapped {
+      div.cardcanvas_tapped {
         -webkit-transform: rotate(90deg);
         -moz-transform: rotate(90deg);
         -o-transform: rotate(90deg);
@@ -101,7 +110,7 @@
         transform: rotate(90deg);
       }
 
-      img.card_exiled {
+      div.cardcanvas_exiled {
         filter: gray;
         filter: grayscale(100%) brightness(50%);
         -webkit-filter: grayscale(100%) brightness(50%);
@@ -110,7 +119,7 @@
         -o-filter: grayscale(100%) brightness(50%);
       }
 
-      img.card_hover {
+      div.cardcanvas_hover {
         outline: 2px solid #ffff00;
       }
 
@@ -121,22 +130,31 @@
 
     <script>
 
-      function generateCard(cardId, image) {
+      function generateCard(cid, image) {
 
-        var imgElement = document.createElement("img");
-        imgElement.id = cardId;
-        imgElement.src = "images/cardback.jpg";
-        imgElement.setAttribute("class", "card my_card rcmenu_target");
-        imgElement.setAttribute("data-toggle", "context");
+        // outer card element for positional changes
+        var handleElement = document.createElement("div");
+        handleElement.id = "h" + cid;
+        handleElement.setAttribute("class", "cardhandle card_own rcmenu_target");
 
-        document.getElementById("my_battlefield").appendChild(imgElement);
+        // inner card element for visual changes
+        var canvasElement = document.createElement("div");
+        canvasElement.id = cid;
+        canvasElement.setAttribute("class", "cardcanvas");
+        canvasElement.setAttribute("data-toggle", "context");
 
-        var $card = $("#" + cardId);
-        updateCardPosition($card, ZoneEnum.LIBRARY);
-        $card.css("z-index", 10); // FIXME
+        handleElement.appendChild(canvasElement);
+        document.getElementById("my_battlefield").appendChild(handleElement);
+
+        var $cardCanvas = $("#" + cid);
+        var $cardHandle = $("#h" + cid);
+        $cardCanvas.css("zIndex", 10); // FIXME
+        $cardCanvas.css("background-image", "url(images/cardback.jpg)");
 
         var cardEntry = {
-          imgSrc : image,
+          canvas : $cardCanvas,
+          handle : $cardHandle,
+          imgSrc : "url(" + image + ")",
           zone : ZoneEnum.LIBRARY,
           faceUp : false,
           tapped : false,
@@ -146,24 +164,38 @@
         };
 
         g_directory.push(cardEntry);
-        g_library.push(cardId);
+        g_library.push(cid);
 
+        updateCardPosition(cid, ZoneEnum.LIBRARY);
       }
 
-      function moveCardToZone(cardId, toZone, shiftHeld) {
+      // return the cid given a jquery handle to an element
+      function getCID($element) {
+        var cid = 0;
+        var id = $element.attr("id");
+        if (id[0] === 'h') {
+          cid = parseInt(id.substring(1));
+        }
+        else {
+          cid = parseInt(id);
+        }
+        return cid;
+      }
 
-        var $card = $("#" + cardId);
+      function moveCardToZone(cid, toZone, shiftHeld) {
+
+        var $cardCanvas = g_directory[cid].canvas;
 
         // update card position (regardless of zone change)
-        updateCardPosition($card, toZone);
+        updateCardPosition(cid, toZone);
 
         // check if we need to actually do anything else
-        var fromZone = g_directory[cardId].zone;
-        if (fromZone == toZone) {
+        var fromZone = g_directory[cid].zone;
+        if (fromZone === toZone) {
 
           // if we're about to abort, and there's a possibility that
           // the user moved a 'hand' card around, refresh the hand 
-          if (toZone == ZoneEnum.HAND) {
+          if (toZone === ZoneEnum.HAND) {
             refreshHand();
           }
 
@@ -184,27 +216,27 @@
             break;
 
           case ZoneEnum.HAND:
-            pos = g_hand.indexOf(cardId);
+            pos = g_hand.indexOf(cid);
             g_hand.splice(pos, 1);
             refHand = true;
             break;
 
           case ZoneEnum.LIBRARY:
-            pos = g_library.indexOf(cardId);
+            pos = g_library.indexOf(cid);
             g_library.splice(pos, 1);
             refLibrary = true;
             break;
 
           case ZoneEnum.GRAVEYARD:
-            pos = g_graveyard.indexOf(cardId);
+            pos = g_graveyard.indexOf(cid);
             g_graveyard.splice(pos, 1);
             refGraveyard = true;
             break;
 
           case ZoneEnum.EXILE:
-            pos = g_exile.indexOf(cardId);
+            pos = g_exile.indexOf(cid);
             g_exile.splice(pos, 1);
-            $card.removeClass("card_exiled");
+            $cardCanvas.removeClass("cardcanvas_exiled");
             refExile = true;
             break;
         }
@@ -218,46 +250,48 @@
             break;
 
           case ZoneEnum.HAND:
-            g_hand.push(cardId);
+            g_hand.push(cid);
             turnFaceUp = true;
             refHand = true;
             break;
 
           case ZoneEnum.LIBRARY:
-            g_library.push(cardId);
+            g_library.push(cid);
             turnFaceUp = false;
             refLibrary = true;
             break;
 
           case ZoneEnum.GRAVEYARD:
-            g_graveyard.push(cardId);
+            g_graveyard.push(cid);
             turnFaceUp = true;
             refGraveyard = true;
             break;
 
           case ZoneEnum.EXILE:
-            g_exile.push(cardId);
+            g_exile.push(cid);
             turnFaceUp = !shiftHeld;
-            $card.addClass("card_exiled");
+            $cardCanvas.addClass("cardcanvas_exiled");
             refExile = true;
             break;
         }
 
+        $cardCanvas.removeClass("cardcanvas_tapped");
+
         // update directory
-        g_directory[cardId].zone = toZone;
-        g_directory[cardId].tapped = false;
-        g_directory[cardId].flipped = false;
-        g_directory[cardId].transformed = false;
-        g_directory[cardId].numCounters = 0;
+        g_directory[cid].zone = toZone;
+        g_directory[cid].tapped = false;
+        g_directory[cid].flipped = false;
+        g_directory[cid].transformed = false;
+        g_directory[cid].numCounters = 0;
 
         // toggle face up/down as appropriate
-        if (g_directory[cardId].faceUp && !turnFaceUp) {
-          $card.attr("src", "images/cardback.jpg");
-          g_directory[cardId].faceUp = false;
+        if (g_directory[cid].faceUp && !turnFaceUp) {
+          $cardCanvas.css("background-image", "url(images/cardback.jpg)");
+          g_directory[cid].faceUp = false;
         }
-        else if (!g_directory[cardId].faceUp && turnFaceUp) {
-          $card.attr("src", g_directory[cardId].imgSrc);
-          g_directory[cardId].faceUp = true;
+        else if (!g_directory[cid].faceUp && turnFaceUp) {
+          $cardCanvas.css("background-image", g_directory[cid].imgSrc);
+          g_directory[cid].faceUp = true;
         }
 
         // refresh display on both to/from zones
@@ -277,36 +311,38 @@
         // FIXME notify other client of state change
       }
 
-      function updateCardPosition($card, toZone) {
+      function updateCardPosition(cid, toZone) {
+
+        var $cardHandle = g_directory[cid].handle;
 
         switch(toZone) {
 
           case ZoneEnum.HAND:
-            $card.css("top", "auto");
-            $card.css("bottom", $("#hand").css("bottom"));
-            $card.css("left", "0px");
-            $card.css("right", "auto");
+            $cardHandle.css("top", "auto");
+            $cardHandle.css("bottom", $("#hand").css("bottom"));
+            $cardHandle.css("left", "0px");
+            $cardHandle.css("right", "auto");
             break;
 
           case ZoneEnum.LIBRARY:
-            $card.css("top", $("#library").css("top"));
-            $card.css("bottom", "auto");
-            $card.css("left", $("#library").css("left"));
-            $card.css("right", "auto");
+            $cardHandle.css("top", $("#library").css("top"));
+            $cardHandle.css("bottom", "auto");
+            $cardHandle.css("left", $("#library").css("left"));
+            $cardHandle.css("right", "auto");
             break;
 
           case ZoneEnum.GRAVEYARD:
-            $card.css("top", $("#graveyard").css("top"));
-            $card.css("bottom", "auto");
-            $card.css("left", $("#graveyard").css("left"));
-            $card.css("right", "auto");
+            $cardHandle.css("top", $("#graveyard").css("top"));
+            $cardHandle.css("bottom", "auto");
+            $cardHandle.css("left", $("#graveyard").css("left"));
+            $cardHandle.css("right", "auto");
             break;
 
           case ZoneEnum.EXILE:
-            $card.css("top", $("#exile").css("top"));
-            $card.css("bottom", "auto");
-            $card.css("left", "auto");
-            $card.css("right", $("#exile").css("right"));
+            $cardHandle.css("top", $("#exile").css("top"));
+            $cardHandle.css("bottom", "auto");
+            $cardHandle.css("left", "auto");
+            $cardHandle.css("right", $("#exile").css("right"));
             break;
         }
       }
@@ -316,17 +352,18 @@
         var z = offset.top * ZWIDTH + offset.left;
         var numCards = g_library.length;
         for (var i = 0; i < numCards; i++) {
-          var $card = $("#" + g_library[i]);
-          if (i == numCards - 1) {
-            $card.show()
-            $card.css("zIndex", z);
+          var cid = g_library[i];
+          var $cardHandle = g_directory[cid].handle;
+          if (i === numCards - 1) {
+            $cardHandle.show()
+            $cardHandle.css("zIndex", z);
           }
-          else if (i == numCards - 2) {
-            $card.show()
-            $card.css("zIndex", z - 1);
+          else if (i === numCards - 2) {
+            $cardHandle.show()
+            $cardHandle.css("zIndex", z - 1);
           }
           else {
-            $card.hide()
+            $cardHandle.hide()
           }
         }
       }
@@ -336,17 +373,18 @@
         var z = offset.top * ZWIDTH + offset.left;
         var numCards = g_graveyard.length;
         for (var i = 0; i < numCards; i++) {
-          var $card = $("#" + g_graveyard[i]);
-          if (i == numCards - 1) {
-            $card.show()
-            $card.css("zIndex", z);
+          var cid = g_graveyard[i];
+          var $cardHandle = g_directory[cid].handle;
+          if (i === numCards - 1) {
+            $cardHandle.show()
+            $cardHandle.css("zIndex", z);
           }
-          else if (i == numCards - 2) {
-            $card.show()
-            $card.css("zIndex", z - 1);
+          else if (i === numCards - 2) {
+            $cardHandle.show()
+            $cardHandle.css("zIndex", z - 1);
           }
           else {
-            $card.hide()
+            $cardHandle.hide()
           }
         }
       }
@@ -356,17 +394,18 @@
         var z = offset.top * ZWIDTH + offset.left;
         var numCards = g_exile.length;
         for (var i = 0; i < numCards; i++) {
-          var $card = $("#" + g_exile[i]);
-          if (i == numCards - 1) {
-            $card.show()
-            $card.css("zIndex", z);
+          var cid = g_exile[i];
+          var $cardHandle = g_directory[cid].handle;
+          if (i === numCards - 1) {
+            $cardHandle.show()
+            $cardHandle.css("zIndex", z);
           }
-          else if (i == numCards - 2) {
-            $card.show()
-            $card.css("zIndex", z - 1);
+          else if (i === numCards - 2) {
+            $cardHandle.show()
+            $cardHandle.css("zIndex", z - 1);
           }
           else {
-            $card.hide()
+            $cardHandle.hide()
           }
         }
       }
@@ -377,22 +416,23 @@
         var numCards = g_hand.length;
         var totalWidth = $("#hand").width() - 100;
         for (var i = 0; i < numCards; i++) {
-          var $card = $("#" + g_hand[i]);
+          var cid = g_hand[i];
+          var $cardHandle = g_directory[cid].handle;
           var left = Math.floor(i * Math.min(totalWidth / (numCards - 1), 100));
-          $card.css("left", left);
-          $card.css("zIndex", zbase + left);
+          $cardHandle.css("left", left);
+          $cardHandle.css("zIndex", zbase + left);
         }
       }
 
-      function highlightCard($card) {
-        $card.addClass("card_hover");
-        $card.css("zIndex", ZTOP);
+      function highlightCard(cid) {
+        g_directory[cid].canvas.addClass("cardcanvas_hover");
+        g_directory[cid].handle.css("zIndex", ZTOP);
       }
 
-      function unhighlightCard($card) {
-        $card.removeClass("card_hover");
-        var offset = $card.offset();
-        $card.css("zIndex", offset.top * ZWIDTH + offset.left);
+      function unhighlightCard(cid) {
+        g_directory[cid].canvas.removeClass("cardcanvas_hover");
+        var offset = g_directory[cid].handle.offset();
+        g_directory[cid].handle.css("zIndex", offset.top * ZWIDTH + offset.left);
       }
 
 
@@ -420,10 +460,9 @@
 
         window.g_shiftHeld = false;
         window.g_rcmenuActive = false;
-        window.g_rcCard;
+        window.g_rcCardId = -1;
 
-
-
+        // temporary code to load some dummy cards
         generateCard(0, "images/seraph_of_dawn.jpg");
         generateCard(1, "images/wild_hunger.jpg");
         generateCard(2, "images/myr_sire.jpg");
@@ -431,7 +470,6 @@
         generateCard(4, "images/lightning_bolt.jpg");
         generateCard(5, "images/resounding_wave.jpg");
         generateCard(6, "images/forest.jpg");
-
         generateCard(7, "images/affa_guard_hound.jpg");
         generateCard(8, "images/lightning_bolt.jpg");
         generateCard(9, "images/resounding_wave.jpg");
@@ -440,75 +478,121 @@
         generateCard(12, "images/myr_sire.jpg");
         generateCard(13, "images/affa_guard_hound.jpg");
         generateCard(14, "images/lightning_bolt.jpg");
-        generateCard(15, "images/resounding_wave.jpg");
-        
+        generateCard(15, "images/resounding_wave.jpg");        
         generateCard(16, "images/forest_full.jpg");
         generateCard(17, "images/island_full.jpg");
         generateCard(18, "images/mountain_full.jpg");
         generateCard(19, "images/forest_full.jpg");
 
-        $(".my_card").draggable({ grid: [5, 20],
+
+        $(".cardhandle").draggable({ grid: [5, 20],
                                   snap: ".zone",
                                   snapMode: "inner",
                                   snapTolerance: 10,
                                   containment: "#battlefield_wrapper"});
 
-
         $("#battlefield_wrapper").droppable({
-          accept: ".my_card",
+          accept: ".cardhandle",
           drop: function( event, ui ) {
-            var cardId = parseInt(ui.draggable.attr("id"));
-            moveCardToZone(cardId,
+            moveCardToZone(getCID(ui.draggable),
                            ZoneEnum.BATTLEFIELD,
                            g_shiftHeld);
           }
         });
         
         $("#hand").droppable({
-          accept: ".my_card",
+          accept: ".cardhandle",
           greedy: true,
           hoverClass: "zone_hover",
           drop: function( event, ui ) {
-            var cardId = parseInt(ui.draggable.attr("id"));
-            moveCardToZone(cardId,
+            moveCardToZone(getCID(ui.draggable),
                            ZoneEnum.HAND,
                            g_shiftHeld);
           }
         });
 
         $("#library").droppable({
-          accept: ".my_card",
+          accept: ".cardhandle",
           greedy: true,
           hoverClass: "zone_hover",
           drop: function( event, ui ) {
-            var cardId = parseInt(ui.draggable.attr("id"));
-            moveCardToZone(cardId,
+            moveCardToZone(getCID(ui.draggable),
                            ZoneEnum.LIBRARY,
                            g_shiftHeld);
           }
         });
 
         $("#graveyard").droppable({
-          accept: ".my_card",
+          accept: ".cardhandle",
           greedy: true,
           hoverClass: "zone_hover",
           drop: function( event, ui ) {
-            var cardId = parseInt(ui.draggable.attr("id"));
-            moveCardToZone(cardId,
+            moveCardToZone(getCID(ui.draggable),
                            ZoneEnum.GRAVEYARD,
                            g_shiftHeld);
           }
         });
 
         $("#exile").droppable({
-          accept: ".my_card",
+          accept: ".cardhandle",
           greedy: true,
           hoverClass: "zone_hover",
           drop: function( event, ui ) {
-            var cardId = parseInt(ui.draggable.attr("id"));
-            moveCardToZone(cardId,
+            moveCardToZone(getCID(ui.draggable),
                            ZoneEnum.EXILE,
                            g_shiftHeld);
+          }
+        });
+
+        // highlight a card upon mouse hover; in the event of a right-click,
+        // hand off the responsibility to unhighlight to the right-click menu
+        $(".cardhandle").hover(
+          function() {
+            if (!g_rcmenuActive) {
+              var cid = getCID($(this));
+              highlightCard(cid);
+            }
+          },
+          function() {
+            if (!g_rcmenuActive) {
+              var cid = getCID($(this));
+              unhighlightCard(cid);
+            }
+        });
+
+        // uses the bootstrap-contextmenu library to implement a right-click menu
+        $('.rcmenu_target').contextmenu({
+          target: '#rcmenu_forcards',
+          before: function (e, context) {
+            g_rcmenuActive = true;
+            g_rcCardId = getCID(context);
+            highlightCard(g_rcCardId);
+            
+            // this.getMenu().find("li").eq(2).find('a').html("This was dynamically changed");
+          },
+          onItem: function (context, e) {
+            // alert($(e.target).text());
+          }
+        });
+
+        $('#rcmenu_forcards').on('hidden.bs.context', function (e) {
+          g_rcmenuActive = false;
+          unhighlightCard(g_rcCardId);
+        });
+
+        // left mouse click to tap/untap a card
+        $(".cardhandle").click(function() {
+          var cid = getCID($(this));
+          var card = g_directory[cid];
+          if (card.zone === ZoneEnum.BATTLEFIELD) {
+            if (!card.tapped) {
+              card.tapped = true;
+              card.canvas.addClass("cardcanvas_tapped");
+            }
+            else {
+              card.tapped = false;
+              card.canvas.removeClass("cardcanvas_tapped");
+            }
           }
         });
 
@@ -530,58 +614,6 @@
           }
         }
 
-        $(".card").hover(
-          function() {
-            if (!g_rcmenuActive) {
-              highlightCard($(this));
-            }
-          },
-          function() {
-            if (!g_rcmenuActive) {
-              unhighlightCard($(this));
-            }
-          });
-
-        $(".card").click(
-          function() {
-            var cardId = parseInt($(this).attr("id"));
-            var cardData = g_directory[cardId];
-            if (cardData.zone == ZoneEnum.BATTLEFIELD) {
-              if (!cardData.tapped) {
-                cardData.tapped = true;
-                $(this).addClass("card_tapped");
-              }
-              else {
-                cardData.tapped = false;
-                $(this).removeClass("card_tapped");
-              }
-            }
-          });
-
-
-
-        $('.rcmenu_target').contextmenu({
-          target: '#card_rcmenu',
-          before: function (e, context) {
-            g_rcmenuActive = true;
-            g_rcCard = context;
-            highlightCard(g_rcCard);
-            
-//            this.getMenu().find("li").eq(2).find('a').html("This was dynamically changed");
-          },
-          onItem: function (context, e) {
-//            alert($(e.target).text());
-          }
-        });
-
-        $('#card_rcmenu').on('hidden.bs.context', function (e) {
-          g_rcmenuActive = false;
-          unhighlightCard(g_rcCard);
-        });
-
-
-
-
       });
 
     </script>
@@ -601,7 +633,7 @@
       </div>
     </div>
 
-    <div id="card_rcmenu">
+    <div id="rcmenu_forcards">
       <ul class="dropdown-menu" role="menu">
         <li><a tabindex="-1">Action</a></li>
         <li><a tabindex="-1">Another action</a></li>
