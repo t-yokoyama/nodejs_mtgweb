@@ -81,6 +81,24 @@
         width: 100px;
         position: absolute;
         border: 0px;
+        -webkit-transition-property: -webkit-transform;
+        -moz-transition-property: -webkit-transform;
+        -o-transition-property: -webkit-transform;
+        -ms-transition-property: -webkit-transform;
+        transition-property: -webkit-transform;
+        -webkit-transition-duration: 500ms;
+        -moz-transition-duration: 500ms;
+        -o-transition-duration: 500ms;
+        -ms-transition-duration: 500ms;
+        transition-duration: 500ms;
+      }
+
+      img.card_tapped {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
       }
 
       img.card_exiled {
@@ -523,6 +541,24 @@
               unhighlightCard($(this));
             }
           });
+
+        $(".card").click(
+          function() {
+            var cardId = parseInt($(this).attr("id"));
+            var cardData = g_directory[cardId];
+            if (cardData.zone == ZoneEnum.BATTLEFIELD) {
+              if (!cardData.tapped) {
+                cardData.tapped = true;
+                $(this).addClass("card_tapped");
+              }
+              else {
+                cardData.tapped = false;
+                $(this).removeClass("card_tapped");
+              }
+            }
+          });
+
+
 
         $('.rcmenu_target').contextmenu({
           target: '#card_rcmenu',

@@ -31,30 +31,34 @@ TODO
    x update the refreshX functions to also show the second from top card, and set the z-index for the top two appropriately
    x bring the mouse focus card to the top
  x set drag limit to end of page
-
-
-
  x figure out how to do a right-click menu
-   x context.js
    x keep selected card at max z-index while right click menu is engaged
-   - figure out how to conditionally gray out certain menu items
-   - write generic code to apply action specifically to the selected object
-
- - implement click to tap:
+ x implement click to tap:
    - http://stackoverflow.com/questions/20061774/rotate-an-image-in-image-source-in-html
+   - http://www.the-art-of-web.com/css/css-animation/
+
+ - fix the x/y weirdness with dragging a rotated image
+   - http://jsfiddle.net/bCUVp/1/
+   - prevent card borders from getting grayscaled by filters
+
+
+
+
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
- - prevent card borders from getting grayscaled by filters
+
+ - figure out how to conditionally gray out certain rcmenu items
+ - implement rcmenu actions
 
  x mouse hover selection? (outline with color)
    - keyboard shortcuts for moveToXZone?
- - group (battlefield only) selection with mouse?
 
 
  - research reasons to use jquery selector $("#blah") vs document.querySelector("#blah")
    - https://jsperf.com/jquery-vs-document-queryselector
  - store a handle to each card element in g_directory to avoid "#" + ID string slowness
  - == vs ===
+   - http://stackoverflow.com/questions/359494/does-it-matter-which-equals-operator-vs-i-use-in-javascript-comparisons
 
 
 
