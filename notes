@@ -41,7 +41,48 @@ TODO
    - http://jsfiddle.net/bCUVp/1/
  x store a handle to each card element in g_directory to avoid "#" + ID string slowness
  x replace == with ===
-   - http://stackoverflow.com/questions/359494/does-it-matter-which-equals-operator-vs-i-use-in-javascript-comparisons
+   - http://stackoverflow.com/questions/359494/does-it-matter-which-equals-operator-vs-i-use-in-javas cript-comparisons
+ x set up a dummy card database in postgres
+   x think of a good schema for managing decks
+ x test pg code to make sure it can connect to the dummy db and extract data
+
+
+ - figure out how to pass database results to a webpage efficiently
+
+ - write a python script:
+
+      accept command line param for db inserts and/or images
+      open json file
+      read contents and store each card into a data structure with all fields
+        ignore everything except
+          set
+            name
+          card
+            layout
+            name
+            manacost
+            cmc
+            colors
+            types
+            subtypes
+            rarity
+            text
+            flavor
+            number
+            power
+            toughness
+            multiverseid
+      generate a lookup table for set name => 3 digit set id (only the sets we want)
+      for each parsed card line
+         if set id is in the wanted list
+            generate 6 digit uid with set id num + card num
+            if db insert option enabled
+               write out insert statement to file
+            if image extract option enabled  
+               go to gatherer page (by multiverse id)
+               save image file to uid.jpg (use my blackbird script)
+
+
 
 
 
@@ -50,15 +91,34 @@ TODO
  - figure out how to conditionally gray out certain rcmenu items
  - implement rcmenu actions
  - keyboard shortcuts for moveToXZone?
+ - implement token generation
 
  - prevent card borders from getting grayscaled by filters
+ - implement wallpapers (how do we elegantly flip a background?)
  - research reasons to use jquery selector $("#blah") vs document.querySelector("#blah")
    - https://jsperf.com/jquery-vs-document-queryselector
+ - split code into separate css/js/html files
 
 
-
- - ? decide how to animate transitions from opponent
  - ? make an internal database of cards (id, image...)
+ - ? decide how to animate transitions from opponent
  - ? learn how to incorporate databases into nodejs server
 
 
+/*
+var conString = "postgres://postgres:password@localhost/mtgtestdb";
+
+var client = new pg.Client(conString);
+client.connect(function(err) {
+  if(err) {
+    return console.error('could not connect to postgres', err);
+  }
+  client.query('SELECT name FROM cards', function(err, result) {
+    if(err) {
+      return console.error('error running query', err);
+    }
+    console.log(result.rows[0].name);
+    client.end();
+  });
+});
+*/
