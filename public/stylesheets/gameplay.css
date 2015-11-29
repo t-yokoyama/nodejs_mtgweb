@@ -1,0 +1,109 @@
+body {
+  margin: 0px;
+  padding: 0px;
+  font: 13px Helvetica, Arial;
+}
+
+div {
+  box-sizing: border-box;
+}
+
+div#window {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+div#battlefield_wrapper {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+}
+
+div.battlefield {
+  position: relative;
+  height: 50%;
+  width: 100%;
+}
+
+div#my_battlefield { background-color: #ffcccc; }
+div#opp_battlefield { background-color: #ccffcc; }
+
+div.zone {
+  position: absolute;
+  height: 130px;
+  width: 100px;
+  padding: 0px;
+  border-width: 1px;
+  border-style: dashed;
+  background-color: #cccccc;
+}
+
+div.zone_hover {
+  outline: 4px solid #ff0000;
+}
+
+div#library { top: 20px; left: 140px; }
+div#graveyard { top: 20px; left: 20px; }
+div#exile { top: 20px; right: 20px; }
+
+div#hand {
+  position: absolute;
+  width: 100%;
+  bottom: 0px;
+}
+
+div.cardhandle {
+  position: absolute;
+  height: 130px;
+  width: 100px;
+  border: 0px;
+  /* background-color: #666666; for debugging */
+}
+
+div.cardcanvas {
+  position: absolute;
+  height: 130px;
+  width: 100px;
+  border: 0px;
+  background-repeat: no-repeat;
+  background-size: 100px 130px;
+  background-color: #aaaaaa; /* for debugging */
+  -webkit-transition-property: -webkit-transform;
+  -moz-transition-property: -webkit-transform;
+  -o-transition-property: -webkit-transform;
+  -ms-transition-property: -webkit-transform;
+  transition-property: -webkit-transform;
+  -webkit-transition-duration: 500ms;
+  -moz-transition-duration: 500ms;
+  -o-transition-duration: 500ms;
+  -ms-transition-duration: 500ms;
+  transition-duration: 500ms;
+}
+
+div.cardcanvas_tapped {
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -o-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+  transform: rotate(90deg);
+}
+
+div.cardcanvas_exiled {
+  filter: gray;
+  filter: grayscale(100%) brightness(50%);
+  -webkit-filter: grayscale(100%) brightness(50%);
+  -moz-filter: grayscale(100%) brightness(50%);
+  -ms-filter: grayscale(100%) brightness(50%);
+  -o-filter: grayscale(100%) brightness(50%);
+}
+
+div.cardcanvas_hover {
+  outline: 2px solid #ffff00;
+}

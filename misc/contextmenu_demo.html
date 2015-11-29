@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Bootstrap</title>
+
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+
+    <script src="http://codeorigin.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="bootstrap-contextmenu.js"></script>
+
+  </head>
+
+  <body>
+
+    <div id="card_rcmenu">
+      <ul class="dropdown-menu" role="menu">
+          <li><a tabindex="-1">Action</a></li>
+          <li><a tabindex="-1">Another action</a></li>
+          <li><a tabindex="-1">Something else here</a></li>
+          <li class="divider"></li>
+          <li><a tabindex="-1">Separated link</a></li>
+      </ul>
+    </div>
+
+    <h5>Demo 3</h5>
+    <p>Show the menu name of the item that was selected</p>
+
+    <div id="rcmenu_target" data-toggle="context" style="height:300px;width:650px;border:1px solid #ddd">
+    </div>
+
+
+    <script type="text/javascript">
+      $('#rcmenu_target').contextmenu({
+        target: '#card_rcmenu',
+        before: function (e) {
+          this.getMenu().find("li").eq(2).find('a').html("This was dynamically changed");
+        },
+        onItem: function (context, e) {
+          alert($(e.target).text());
+        }
+      });
+    </script>
+
+</body></html>
