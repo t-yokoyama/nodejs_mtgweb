@@ -1,8 +1,9 @@
 var express = require('express');
 var path = require('path');
+var pg = require('pg');
 //var cookieParser = require('cookie-parser');
 
-var routes = require('./routes/index');
+var routes = require('./routes/route');
 
 var app = express();
 
@@ -56,7 +57,6 @@ var express = require('express')
 var app = express();
 var http_server = require('http').Server(app);
 var server_io = require('socket.io')(http_server);
-var pg = require('pg');
 
 app.use(express.static('public'));
 

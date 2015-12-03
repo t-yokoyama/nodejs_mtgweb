@@ -45,24 +45,14 @@ TODO
  x set up a dummy card database in postgres
    x think of a good schema for managing decks
  x test pg code to make sure it can connect to the dummy db and extract data
+   - http://expressjs.com/en/guide/database-integration.html#postgres
  x rearchitect site with express-generator
    - http://cwbuecheler.com/web/tutorials/2013/node-express-mongo/
+ x figure out how to pass database results to a webpage efficiently
 
 
 
 
- - implement proof of concept for full site architecture
-   - login (username, password fields)
-   - lobby (see other users who are logged in, show decks )
-   - game
-   - deckbuilder (add new decks)
-
- - mongodb vs postgres?
-   - how to query/update database via node/express?
-
- - figure out how to pass database results to a webpage efficiently
- - implement sessions/cookies for users
-   - https://stormpath.com/blog/everything-you-ever-wanted-to-know-about-node-dot-js-sessions/
 
  - write a python script:
 
@@ -98,8 +88,21 @@ TODO
                save image file to uid.jpg (use my blackbird script)
 
 
+ - figure out how to get two users into the same room with their specified decks
+   - maybe embed a match id and the deck id into the url, then have route query the DB for the decklist based on deck id to pass in, + do something with the match id for socket.io?
 
 
+ - implement sessions/cookies for users
+   - https://stormpath.com/blog/everything-you-ever-wanted-to-know-about-node-dot-js-sessions/
+
+ - implement proof of concept for full site architecture
+   - login (username, password fields)
+   - lobby (see other users who are logged in, show decks )
+   - game
+   - deckbuilder (add new decks)
+
+
+ - fix the z-index (it was broken during the port from a single html file to jade/js/css)
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
  - figure out how to conditionally gray out certain rcmenu items
@@ -119,6 +122,8 @@ TODO
  - ? learn how to incorporate databases into nodejs server
 
 
+ - which of the following methods of connecting/querying is better?
+
 /*
 var conString = "postgres://postgres:password@localhost/mtgtestdb";
 
@@ -136,3 +141,26 @@ client.connect(function(err) {
   });
 });
 */
+
+/*
+  var conString = "postgres://postgres:password@localhost/mtgtestdb";
+  pg.connect(conString, function(err, client, done) {
+
+    if (err) {
+      return console.error('error fetching client from pool', err);
+    }
+    client.query(
+      'SELECT imageurl FROM cards WHERE id = $1::int',
+      ['100001'],
+      function(err, result) {
+        done();
+        if (err) {
+          return console.error('error running query', err);
+        }
+        console.log(result.rows[0].imageurl);
+      }
+    );
+
+  });
+*/
+
