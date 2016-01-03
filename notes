@@ -59,8 +59,7 @@ TODO
    - http://code.tutsplus.com/tutorials/authenticating-nodejs-applications-with-passport--cms-21619
    - https://scotch.io/tutorials/easy-node-authentication-setup-and-local
  x figure out how to display username on profile
-
- - figure out how to replace mongodb with postgres in logindemo
+ x figure out how to replace mongodb with postgres in logindemo
 
 
 
