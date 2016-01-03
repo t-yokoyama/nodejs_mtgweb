@@ -62,17 +62,11 @@ TODO
  x figure out how to replace mongodb with postgres in logindemo
 
 
-
  - implement proof of concept for full site architecture
    - login (username, password fields)
    - lobby (see other users who are logged in, show decks )
    - game
    - deckbuilder (add new decks)
-
-
-
-
-
 
  - figure out how to get two users into the same room with their specified decks
    - maybe embed a match id and the deck id into the url, then have route query the DB for the decklist based on deck id to pass in, + do something with the match id for socket.io?
