@@ -1,0 +1,26 @@
+doctype html
+html
+
+  head
+    title MTG Web (Test)
+    link(rel='stylesheet', href='/stylesheets/default.css')
+
+  body
+
+    h1 My Deck
+
+    each card, i in my_decklist
+      - var n = 0
+      while n < card.qty
+        img(src="#{card.imageurl}" height=130 width=100)
+        - n++
+
+    br
+
+    h1 Opponent's Deck
+
+    each card, i in opp_decklist
+      - var n = 0
+      while n < card.qty
+        img(src="#{card.imageurl}" height=130 width=100)
+        - n++

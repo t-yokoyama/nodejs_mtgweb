@@ -54,6 +54,7 @@ TODO
    - http://expressjs.com/en/guide/database-integration.html#postgres
  x rearchitect site with express-generator
    - http://cwbuecheler.com/web/tutorials/2013/node-express-mongo/
+   - http://jilles.me/getting-the-express-app-js/
  x figure out how to pass database results to a webpage efficiently
  x implement sessions/cookies for users
    - http://code.tutsplus.com/tutorials/authenticating-nodejs-applications-with-passport--cms-21619
@@ -61,14 +62,9 @@ TODO
  x figure out how to display username on profile
  x figure out how to replace mongodb with postgres in logindemo
 
-
- - implement proof of concept for full site architecture
-   - login (username, password fields)
-   - lobby (see other users who are logged in, show decks )
-   - game
-   - deckbuilder (add new decks)
-
- - figure out how to get two users into the same room with their specified decks
+ 
+ - implement a lobby
+   - figure out how to get two users into the same room with their specified decks
    - maybe embed a match id and the deck id into the url, then have route query the DB for the decklist based on deck id to pass in, + do something with the match id for socket.io?
 
 
@@ -126,5 +122,4 @@ TODO
 
  - ? make an internal database of cards (id, image...)
  - ? decide how to animate transitions from opponent
- - ? learn how to incorporate databases into nodejs server
 

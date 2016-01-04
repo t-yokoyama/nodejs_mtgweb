@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var server = require('http').Server(app);
 
 var path = require('path');
 var logger = require('morgan');
@@ -16,12 +17,20 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// middleware modules
+
 var passport = require('passport');
 var login = require('./middleware/login-session.js');
 var routes = require('./middleware/routes.js');
 
 login(app, passport);
 routes(app, passport);
+
+var socketio = require('./middleware/socketio.js');
+socketio(app, server);
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -54,38 +63,10 @@ app.use(function(err, req, res, next) {
   });
 });
 
+// this needs to be server.listen and not app.listen for socket.io
+server.listen(3000, function () {
+  console.log('Listening at port 3000');
+});
+
+
 module.exports = app;
-
-
-// this is some scaffolding to get socket.io to work
-/*
-var express = require('express')
-var app = express();
-var http_server = require('http').Server(app);
-var server_io = require('socket.io')(http_server);
-
-app.use(express.static('public'));
-
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/game.html');
-});
-
-server_io.on('connection', function(socket){
-
-  console.log('a user connected.');
-
-  socket.on('chat message', function(msg){
-    console.log('message: ' + msg);
-    server_io.emit('chat message', msg);
-  });
-
-  socket.on('disconnect', function(){
-  	console.log('a user disconnected.');
-  });
-});
-
-http_server.listen(3000, function(){
-  console.log('listening on localhost:3000...');
-});
-
-*/

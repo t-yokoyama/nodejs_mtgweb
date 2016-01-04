@@ -22,16 +22,21 @@ module.exports = function(app, passport) {
     res.render('profile', { user: req.user });
   });
 
+  /* GET lobby page. */
+  app.get('/lobby', isLoggedIn, function(req, res) {
+    res.render('lobby', { user: req.user });
+  });
+
   /* Handle login POST */
   app.post('/login', passport.authenticate('login', {
-    successRedirect: '/profile',
+    successRedirect: '/lobby',
     failureRedirect: '/login',
     failureFlash : true
   }));
 
   /* Handle Registration POST */
   app.post('/signup', passport.authenticate('signup', {
-    successRedirect: '/profile',
+    successRedirect: '/lobby',
     failureRedirect: '/signup',
     failureFlash : true
   }));
@@ -52,6 +57,33 @@ module.exports = function(app, passport) {
           return console.error('error running query', err);
         }
         res.render('gameplay', {decklist: result.rows});
+      }
+    );
+  });
+
+  // FIXME this is a dummy placeholder
+  app.get('/gameplay_test', function(req, res) {
+
+    db.query(
+      'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+      ['1'], // deck id
+      function(err, my_result) {
+        if (err) {
+          return console.error('error running query', err);
+        }
+
+        db.query(
+          'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+          ['2'], // deck id
+          function(err, opp_result) {
+            if (err) {
+              return console.error('error running query', err);
+            }
+
+            res.render('gameplay_test', {my_decklist: my_result.rows, opp_decklist: opp_result.rows});
+          }
+        );
+
       }
     );
   });
