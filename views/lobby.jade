@@ -5,26 +5,64 @@ html
     script(src='https://cdn.socket.io/socket.io-1.2.0.js')
     script(src='http://code.jquery.com/jquery-1.11.1.js')
     style.
+
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+
+      div#window { position: absolute; height: 100%; width: 100%; top: 0px; bottom: 0px; left: 0px; right: 0px; }
+      div#sessions { position: absolute; height: 160px; top: 0px; left: 0px; right: 0px; overflow-x: auto; background-color: #cccccc; }
+      div#chatcontainer { position: absolute; width: 100%; top: 160px; bottom: 0px; left: 0px; right: 0px; }
+      div#userlist { position: absolute; top: 0px; bottom: 0px; left: 0px; width: 250px; overflow-y: auto; }
+      div#chatcontainer2 { position: absolute; top: 0px; bottom: 0px; left: 250px; right: 0px; }
+      div#chatmessages { position: absolute; top: 0px; bottom: 40px; left: 0px; right: 0px; overflow-y: scroll; }
+      div#chatinput { position: absolute; height: 40px; bottom: 0px; left: 0px; right: 0px; background-color: #444444; }
+
+      form { position: absolute; height: 40px; bottom: 0px; left: 0px; right: 0px; padding: 3px; }
+      form input { position: absolute; width: 90%; left: 0px; right: 0px; border: 0; padding: 10px; margin-left: 3px; }
+      form button { position: absolute; right: 0px; width: 10%; border: none; padding: 10px; margin-right: 3px; background: #cccccc; }
+
+      #users { list-style-type: none; margin: 0; padding: 0; background: #dddddd; }
+      #users li { padding: 10px 20px; }
+      li#system { font-weight: bold; }
+
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
+      #messages li:nth-child(even) { background: #eeeeee; }
+
   body
-    ul#messages
-    form(action='')
-      input#m(autocomplete='off')
-      button Send
+    div#window
+      div#sessions game sessions
+      div#chatcontainer
+        div#userlist user list
+          ul#users
+        div#chatcontainer2
+          div#chatmessages
+            ul#messages
+          div#chatinput
+            form(action='')
+              input#m(autocomplete='off')
+              button Send
+
     script.
       var client_io = io('/lobby');
+      client_io.emit('user_join', '#{user.username}');
+
       $('form').submit(function(){
-      client_io.emit('chat message', $('#m').val());
-      $('#m').val('');
-      return false;
+        // FIXME don't send empty string
+        client_io.emit('chat_message', { username: '#{user.username}', msg: $('#m').val() });
+        $('#m').val('');
+        return false;
       });
-      client_io.on('chat message', function(msg){
-      $('#messages').append($('<li>').text(msg));
+
+      client_io.on('chat_message', function(data){
+        $('#messages').append($('<li>').text(data.username + ': ' + data.msg));
       });
+
+      client_io.on('sys_message', function(msg){
+        $('#messages').append($('<li id=system>').text(msg));
+      });
+
+      client_io.on('user_join', function(user){
+        $('#users').append($('<li>').text(user));
+      });
+

@@ -64,8 +64,14 @@ TODO
 
  
  - implement a lobby
+   - chat window, userlist, challenge panel, 'challenge received' panel
+   - show username per connected user
    - figure out how to get two users into the same room with their specified decks
-   - maybe embed a match id and the deck id into the url, then have route query the DB for the decklist based on deck id to pass in, + do something with the match id for socket.io?
+     - maybe create a state machine with socket.io where
+       1) user A chooses a deck/opponent (user B), sends duel request (goes into waiting mode)
+       2) user B receives a notification in a 'challenge received' popup
+       3) user B selects deck, sends accept (opens gameplay.html with both deck IDs)
+       4) user A receives accept (opens gameplay.html with both deck IDs)
 
 
 

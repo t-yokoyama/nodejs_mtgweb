@@ -2,12 +2,13 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 
+// app configuration
+
 var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-// view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
@@ -22,13 +23,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 var passport = require('passport');
 var login = require('./middleware/login-session.js');
 var routes = require('./middleware/routes.js');
+var socketio = require('./middleware/socketio.js');
 
 login(app, passport);
 routes(app, passport);
-
-var socketio = require('./middleware/socketio.js');
 socketio(app, server);
-
 
 
 
