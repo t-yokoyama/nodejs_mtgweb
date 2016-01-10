@@ -23,21 +23,36 @@ html
 
       #users { list-style-type: none; margin: 0; padding: 0; background: #dddddd; }
       #users li { padding: 10px 20px; }
-      li#system { font-weight: bold; }
+      li.header { font-weight: bold; background: #aaaaaa; }
 
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(even) { background: #eeeeee; }
+      li.system { font-style: italic; }
 
   body
     div#window
-      div#sessions game sessions
+      div#sessions
+        p game sessions
       div#chatcontainer
-        div#userlist user list
+        div#userlist
           ul#users
+            li.header Users
         div#chatcontainer2
           div#chatmessages
             ul#messages
+              li
+                b
+                  font(color='#ff6600')
+                    blah blah blah
+              li
+                b
+                  font(color='#0099cc')
+                    blah blah blah
+              li
+                b
+                  font(color='#000044')
+                    blah blah blah
           div#chatinput
             form(action='')
               input#m(autocomplete='off')
@@ -45,24 +60,37 @@ html
 
     script.
       var client_io = io('/lobby');
-      client_io.emit('user_join', '#{user.username}');
+      var username = '#{user.username}';
+
+      client_io.emit('user_join', {userid: '#{user.id}', username: '#{user.username}'});
 
       $('form').submit(function(){
         // FIXME don't send empty string
-        client_io.emit('chat_message', { username: '#{user.username}', msg: $('#m').val() });
+        client_io.emit('chat_message', { userid: '#{user.id}',
+                                         username: username,
+                                         msg: $('#m').val()});
         $('#m').val('');
         return false;
       });
 
       client_io.on('chat_message', function(data){
-        $('#messages').append($('<li>').text(data.username + ': ' + data.msg));
+        $('#messages').append('<li class=m_' + data.userid + '><b>' + data.username + '</b>: ' + data.msg + '</li>');
       });
 
       client_io.on('sys_message', function(msg){
-        $('#messages').append($('<li id=system>').text(msg));
+        $('#messages').append('<li class=system>' + msg + '</li>');
       });
 
-      client_io.on('user_join', function(user){
-        $('#users').append($('<li>').text(user));
+      client_io.on('user_join', function(data){
+        $('#users').append('<li id=u_' + data.username + '>' + data.username + '</li>');
+        $('html > head').append('<style>#u_' + data.username + ' { color: ' + data.color + '; }</style>');
+        $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
       });
 
+      client_io.on('user_exit', function(data){
+        $('#u_' + data.username).remove();
+      });
+
+      client_io.on('user_init', function(data){
+        username = data.username;
+      });

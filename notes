@@ -62,7 +62,6 @@ TODO
  x figure out how to display username on profile
  x figure out how to replace mongodb with postgres in logindemo
 
- 
  - implement a lobby
    - chat window, userlist, challenge panel, 'challenge received' panel
    - show username per connected user
@@ -72,6 +71,10 @@ TODO
        2) user B receives a notification in a 'challenge received' popup
        3) user B selects deck, sends accept (opens gameplay.html with both deck IDs)
        4) user A receives accept (opens gameplay.html with both deck IDs)
+   - disconnect socket when passport logout detected
+     - https://github.com/jfromaniello/passport.socketio
+     - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
+     - http://stackoverflow.com/questions/13095418/how-to-use-passport-with-express-and-socket-io
 
 
 
