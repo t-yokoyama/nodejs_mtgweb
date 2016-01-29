@@ -30,10 +30,15 @@ html
       #messages li:nth-child(even) { background: #eeeeee; }
       li.system { font-style: italic; }
 
+      .game { height: 140px; width: 200px; background-color: #ffff44; }
+      .game_pending {}
+      .game_accepted {}
+      .game_ready {}
+      .game_insession {}
+
   body
     div#window
       div#sessions
-        p game sessions
       div#chatcontainer
         div#userlist
           ul#users
@@ -41,18 +46,6 @@ html
         div#chatcontainer2
           div#chatmessages
             ul#messages
-              li
-                b
-                  font(color='#ff6600')
-                    blah blah blah
-              li
-                b
-                  font(color='#0099cc')
-                    blah blah blah
-              li
-                b
-                  font(color='#000044')
-                    blah blah blah
           div#chatinput
             form(action='')
               input#m(autocomplete='off')
@@ -74,7 +67,8 @@ html
       });
 
       client_io.on('chat_message', function(data){
-        $('#messages').append('<li class=m_' + data.userid + '><b>' + data.username + '</b>: ' + data.msg + '</li>');
+        $('#messages').append('<li class=m_' + data.userid + '><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
+        $('#sessions').append('<div class=game>game</div>');
       });
 
       client_io.on('sys_message', function(msg){

@@ -4,9 +4,11 @@ module.exports = function(app, server) {
 
   var users = {};
   var userid_hash = {};
+  var games = {};
 
   var lobby_io = io.of('/lobby');
   lobby_io.on('connection', function(socket){
+
     console.log('a client connected.');
 
     socket.on('user_join', function(data) {
@@ -24,8 +26,6 @@ module.exports = function(app, server) {
         userid_hash[data.userid] = { num_sockets: 1,
         	                         colorid: colorid };
         data.color = color_array[colorid];
-        console.log(colorid);
-        console.log(data.color);
       }
       socket.emit('user_init', { username: data.username });
 
@@ -70,6 +70,10 @@ module.exports = function(app, server) {
           delete userid_hash[disconnect_userid];
         }
       }
+    });
+
+    socket.on('initiate_game', function(data) {
+
     });
 
     // FIXME disconnect from chat when user logs out of site

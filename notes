@@ -76,42 +76,7 @@ TODO
      - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
      - http://stackoverflow.com/questions/13095418/how-to-use-passport-with-express-and-socket-io
 
-
-
- - write a python script:
-
-      accept command line param for db inserts and/or images
-      open json file
-      read contents and store each card into a data structure with all fields
-        ignore everything except
-          set
-            name
-          card
-            layout
-            name
-            manacost
-            cmc
-            colors
-            types
-            subtypes
-            rarity
-            text
-            flavor
-            number
-            power
-            toughness
-            multiverseid
-      generate a lookup table for set name => 3 digit set id (only the sets we want)
-      for each parsed card line
-         if set id is in the wanted list
-            generate 6 digit uid with set id num + card num
-            if db insert option enabled
-               write out insert statement to file
-            if image extract option enabled  
-               go to gatherer page (by multiverse id)
-               save image file to uid.jpg (use my blackbird script)
-
-
+ - write a python script to generate card insert queries and crawl for image files
 
 
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)

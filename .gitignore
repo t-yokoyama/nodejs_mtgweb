@@ -1,3 +1,4 @@
 node_modules/
 npm-debug
-database/AllSets.json
+database/images
+database/json
