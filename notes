@@ -61,6 +61,7 @@ TODO
    - https://scotch.io/tutorials/easy-node-authentication-setup-and-local
  x figure out how to display username on profile
  x figure out how to replace mongodb with postgres in logindemo
+ x write a python script to generate card insert queries and crawl for image files
 
  - implement a lobby
    - chat window, userlist, challenge panel, 'challenge received' panel
@@ -76,7 +77,6 @@ TODO
      - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
      - http://stackoverflow.com/questions/13095418/how-to-use-passport-with-express-and-socket-io
 
- - write a python script to generate card insert queries and crawl for image files
 
 
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)

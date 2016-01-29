@@ -2,3 +2,4 @@ node_modules/
 npm-debug
 database/images
 database/json
+database/insert_cards.sql
