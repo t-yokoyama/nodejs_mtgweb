@@ -10,9 +10,10 @@ import urllib.request
 # configurable parameters
 
 generate_queries    = True
-generate_images     = True
+generate_images     = False
 query_filename      = "insert_cards.sql"
-images_dir          = "images/"
+temp_images_dir     = "images/"
+final_images_dir    = "images/cards/"
 json_dir            = "json/"
 
 selected_sets = {
@@ -312,12 +313,12 @@ def cardToQuery(card, cid, image1_cid, image2_cid, exp, addable):
     field_layout = str(layoutToCode(card["layout"]))
     
     # imageurl text
-    field_imageurl = "'%s'" % (images_dir + str(image1_cid) + ".jpg")
+    field_imageurl = "'%s'" % (final_images_dir + str(image1_cid) + ".jpg")
     
     # imageurl2 text
     field_imageurl2 = "NULL"
     if image2_cid != 0:
-        field_imageurl2 = "'%s'" % (images_dir + str(image2_cid) + ".jpg")
+        field_imageurl2 = "'%s'" % (final_images_dir + str(image2_cid) + ".jpg")
 
     # multiverseid integer
     field_multiverseid = "'%s'" % card["multiverseid"]
@@ -491,7 +492,7 @@ def processCard(card, exp):
     # retrieve the image for the card from the gatherer website
     if generate_images:
         if needs_image:
-            image_path = images_dir + str(cid) + ".jpg"
+            image_path = temp_images_dir + str(cid) + ".jpg"
             if not os.path.exists(image_path):
                 urllib.request.urlretrieve(
                     "http://gatherer.wizards.com/Handlers/Image.ashx?multiverseid=%d&type=card" % card["multiverseid"],

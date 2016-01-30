@@ -3,3 +3,5 @@ npm-debug
 database/images
 database/json
 database/insert_cards.sql
+public/images/cards/*
+

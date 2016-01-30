@@ -25,7 +25,7 @@ function generateCard(image) {
   var $cardCanvas = $("#" + cid);
   var $cardHandle = $("#h" + cid);
   $cardCanvas.css("zIndex", 10); // FIXME
-  $cardCanvas.css("background-image", "url(images/cardback.jpg)");
+  $cardCanvas.css("background-image", "url(images/cards/back.jpg)");
 
   var cardEntry = {
     canvas : $cardCanvas,
