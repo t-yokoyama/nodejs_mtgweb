@@ -2,8 +2,8 @@ doctype html
 html
   head
     title Lobby
-    script(src='https://cdn.socket.io/socket.io-1.2.0.js')
-    script(src='http://code.jquery.com/jquery-1.11.1.js')
+    script(src='https://code.jquery.com/jquery-1.9.1.min.js')
+    script(src='/socket.io/socket.io.js')
     style.
 
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,9 +17,9 @@ html
       div#chatmessages { position: absolute; top: 0px; bottom: 40px; left: 0px; right: 0px; overflow-y: scroll; }
       div#chatinput { position: absolute; height: 40px; bottom: 0px; left: 0px; right: 0px; background-color: #444444; }
 
-      form { position: absolute; height: 40px; bottom: 0px; left: 0px; right: 0px; padding: 3px; }
-      form input { position: absolute; width: 90%; left: 0px; right: 0px; border: 0; padding: 10px; margin-left: 3px; }
-      form button { position: absolute; right: 0px; width: 10%; border: none; padding: 10px; margin-right: 3px; background: #cccccc; }
+      form#sendchat { position: absolute; height: 40px; bottom: 0px; left: 0px; right: 0px; padding: 3px; }
+      form#sendchat input { position: absolute; width: 90%; left: 0px; right: 0px; border: 0; padding: 10px; margin-left: 3px; }
+      form#sendchat button { position: absolute; right: 0px; width: 10%; border: none; padding: 10px; margin-right: 3px; background: #cccccc; }
 
       #users { list-style-type: none; margin: 0; padding: 0; background: #dddddd; }
       #users li { padding: 10px 20px; }
@@ -30,12 +30,14 @@ html
       #messages li:nth-child(even) { background: #eeeeee; }
       li.system { font-style: italic; }
 
-      .game { height: 140px; width: 200px; background-color: #ffff44; }
-      .game_pending {}
+      .game { height: 140px; width: 200px; }
+      .game_pending { background-color: #ffff44; }
       .game_accepted {}
       .game_ready {}
       .game_insession {}
 
+      button { float: right }
+      
   body
     div#window
       div#sessions
@@ -47,44 +49,71 @@ html
           div#chatmessages
             ul#messages
           div#chatinput
-            form(action='')
+            form#sendchat(action='')
               input#m(autocomplete='off')
               button Send
 
     script.
-      var client_io = io('/lobby');
-      var username = '#{user.username}';
 
-      client_io.emit('user_join', {userid: '#{user.id}', username: '#{user.username}'});
+      $( document ).ready(function() {
 
-      $('form').submit(function(){
-        // FIXME don't send empty string
-        client_io.emit('chat_message', { userid: '#{user.id}',
-                                         username: username,
-                                         msg: $('#m').val()});
-        $('#m').val('');
-        return false;
+        var client_io = io('/lobby');
+
+        client_io.on('user_join', function(data){
+          $('#users').append('<li id=u_' + data.username + '>' + data.username + ' <button id=c_' + data.userid + '>challenge</button></li>');
+          $('html > head').append('<style>#u_' + data.username + ' { color: ' + data.color + '; }</style>');
+          $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
+          
+          $('#c_' + data.userid).click(function(){
+  
+            // FIXME this is how we find out which user to send the invite to
+            alert('from ' + '#{user.id}' + ' to ' + data.userid);
+  
+            client_io.emit('initiate_game', { from: '#{user.id}',
+                                              to: data.userid });
+            return false;
+          });
+  
+          // TODO: prevent users from being able to challenge themselves
+          // TODO: on the socketio.js end, receive the initiate_game request and route it to the proper opponent
+          // TODO: create a local pending session
+          // TODO: elsewhere on lobby.jade, receive the initiate_game request to create a session from the perspective of the opponent
+
+          
+        });
+
+        client_io.on('user_exit', function(data){
+          $('#u_' + data.username).remove();
+        });
+
+        client_io.on('chat_message', function(data){
+          $('#messages').append('<li class=m_' + data.userid + '><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
+
+
+
+          // FIXME move this somewhere sensible
+          // $('#sessions').append('<div class=game>game</div>');
+
+        });
+        
+        client_io.on('sys_message', function(msg){
+          $('#messages').append('<li class=system>' + msg + '</li>');
+        });
+
+        $('#sendchat').submit(function(){
+          // FIXME don't send empty string
+          client_io.emit('chat_message', { userid: '#{user.id}',
+                                           username: '#{user.username}',
+                                           msg: $('#m').val()});
+          $('#m').val('');
+          return false;
+        });
+
+        client_io.emit('user_join', {userid: '#{user.id}', username: '#{user.username}'});
+
+
       });
+      
 
-      client_io.on('chat_message', function(data){
-        $('#messages').append('<li class=m_' + data.userid + '><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
-        $('#sessions').append('<div class=game>game</div>');
-      });
 
-      client_io.on('sys_message', function(msg){
-        $('#messages').append('<li class=system>' + msg + '</li>');
-      });
 
-      client_io.on('user_join', function(data){
-        $('#users').append('<li id=u_' + data.username + '>' + data.username + '</li>');
-        $('html > head').append('<style>#u_' + data.username + ' { color: ' + data.color + '; }</style>');
-        $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
-      });
-
-      client_io.on('user_exit', function(data){
-        $('#u_' + data.username).remove();
-      });
-
-      client_io.on('user_init', function(data){
-        username = data.username;
-      });

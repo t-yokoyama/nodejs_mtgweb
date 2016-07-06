@@ -1,5 +1,6 @@
 node_modules/
 npm-debug
+npm-debug.log
 database/images
 database/json
 database/insert_cards.sql

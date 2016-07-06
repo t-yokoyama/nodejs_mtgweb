@@ -27,7 +27,6 @@ module.exports = function(app, server) {
         	                         colorid: colorid };
         data.color = color_array[colorid];
       }
-      socket.emit('user_init', { username: data.username });
 
       // send list of existing users to client (starting with ourself)
       socket.emit('user_join', data);
