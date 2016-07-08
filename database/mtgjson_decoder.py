@@ -321,7 +321,7 @@ def cardToQuery(card, cid, image1_cid, image2_cid, exp, addable):
         field_imageurl2 = "'%s'" % (final_images_dir + str(image2_cid) + ".jpg")
 
     # multiverseid integer
-    field_multiverseid = "'%s'" % card["multiverseid"]
+    field_multiverseid = "%s" % card["multiverseid"]
 
     # addable boolean
     field_addable = "TRUE" if addable else "FALSE"

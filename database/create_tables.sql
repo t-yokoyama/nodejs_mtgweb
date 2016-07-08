@@ -1,3 +1,21 @@
+
+-- Table: users
+
+-- DROP TABLE users;
+
+CREATE TABLE users
+(
+  username text,
+  password text,
+  email text,
+  id serial NOT NULL,
+  CONSTRAINT id_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+
+
 -- Table: cards
 
 -- DROP TABLE cards;
@@ -26,10 +44,6 @@ CREATE TABLE cards
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE cards
-  OWNER TO postgres;
-
-
 
 
 -- Table: decks
@@ -50,8 +64,7 @@ CREATE TABLE decks
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE decks
-  OWNER TO postgres;
+
 
 -- Index: fki_user_id_fkey
 
@@ -61,7 +74,6 @@ CREATE INDEX fki_user_id_fkey
   ON decks
   USING btree
   (user_id);
-
 
 
 
@@ -85,27 +97,4 @@ CREATE TABLE decklists
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE decklists
-  OWNER TO postgres;
-
-
-
-
--- Table: users
-
--- DROP TABLE users;
-
-CREATE TABLE users
-(
-  username text,
-  password text,
-  email text,
-  id serial NOT NULL,
-  CONSTRAINT id_pkey PRIMARY KEY (id)
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE users
-  OWNER TO postgres;
 

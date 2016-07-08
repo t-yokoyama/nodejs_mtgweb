@@ -30,14 +30,21 @@ html
       #messages li:nth-child(even) { background: #eeeeee; }
       li.system { font-style: italic; }
 
-      .game { height: 140px; width: 200px; }
-      .game_pending { background-color: #ffff44; }
-      .game_accepted {}
-      .game_ready {}
-      .game_insession {}
+      div.game { height: 140px; width: 200px; }
+      div.game_sent { background-color: #ffff44; }
+      div.game_received { background-color: #ff0044; }
+      div.game_configuring {}
+      div.game_ready {}
+      div.game_insession {}
+      div.game_canceled { background-color: #aaaaaa; }
 
-      button { float: right }
-      
+      button.challenge { float: right }
+      button.game_accept {}
+      button.game_decline {}
+      button.game_cancel {}
+      button.game_close {}
+
+
   body
     div#window
       div#sessions
@@ -51,35 +58,48 @@ html
           div#chatinput
             form#sendchat(action='')
               input#m(autocomplete='off')
-              button Send
+              button#sendbutton(disabled) Send
 
     script.
 
       $( document ).ready(function() {
 
         var client_io = io('/lobby');
+        var assigned_username = "UNINITIALIZED"
+
+        // FIXME make the UI for the game sessions pretty instead of total garbage
+
+        client_io.on('user_init', function(data){
+        
+            // when we joined the chat, the server may have taken our raw username and appended an instance number to it
+            // so we set our local username to this returned value
+            assigned_username = data.username
+            $('#users').append('<li id=u_' + assigned_username + '>' + assigned_username + '</li>');
+            $('html > head').append('<style>#u_' + assigned_username + ' { color: ' + data.color + '; }</style>');
+            $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
+            
+            // enable the message send button now
+            $('#sendbutton').prop('disabled', false);
+        });
 
         client_io.on('user_join', function(data){
-          $('#users').append('<li id=u_' + data.username + '>' + data.username + ' <button id=c_' + data.userid + '>challenge</button></li>');
+        
+          $('#users').append('<li id=u_' + data.username + '>' + data.username + ' <button class=challenge id=c_' + data.userid + '>challenge</button></li>');
           $('html > head').append('<style>#u_' + data.username + ' { color: ' + data.color + '; }</style>');
           $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
-          
+
+          // FIXME should we disable users challenging other instances of themselves?
+
           $('#c_' + data.userid).click(function(){
-  
-            // FIXME this is how we find out which user to send the invite to
-            alert('from ' + '#{user.id}' + ' to ' + data.userid);
-  
-            client_io.emit('initiate_game', { from: '#{user.id}',
-                                              to: data.userid });
+            client_io.emit('initiate_game', { recipient_username: data.username });
             return false;
           });
-  
-          // TODO: prevent users from being able to challenge themselves
+
           // TODO: on the socketio.js end, receive the initiate_game request and route it to the proper opponent
           // TODO: create a local pending session
           // TODO: elsewhere on lobby.jade, receive the initiate_game request to create a session from the perspective of the opponent
+          // TODO: somehow assign an id to the game sessions locally and remotely so we know how to distinguish them downstream
 
-          
         });
 
         client_io.on('user_exit', function(data){
@@ -88,30 +108,74 @@ html
 
         client_io.on('chat_message', function(data){
           $('#messages').append('<li class=m_' + data.userid + '><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
-
-
-
-          // FIXME move this somewhere sensible
-          // $('#sessions').append('<div class=game>game</div>');
-
+          $('#chatmessages').animate({ scrollTop: $('#chatmessages')[0].scrollHeight}, 1000);
         });
         
         client_io.on('sys_message', function(msg){
           $('#messages').append('<li class=system>' + msg + '</li>');
+          $('#chatmessages').animate({ scrollTop: $('#chatmessages')[0].scrollHeight}, 1000);
+        });
+
+        client_io.on('game_sent', function(data){
+        
+          // FIXME make sure this adds the game in the leftmost position
+          $('#sessions').prepend('<div id=g_' + data.gameid + ' class="game game_sent">game_sent</div>');
+          $('#g_' + data.gameid).append('<button class=game_cancel id=gc_' + data.gameid + '>cancel</button>');
+
+          $('#gc_' + data.gameid).click(function(){
+            client_io.emit('cancel_game', { gameid: data.gameid } );
+            return false;
+          });
+        });
+
+        client_io.on('game_received', function(data){
+        
+          // FIXME make sure this adds the game in the leftmost position
+          $('#sessions').prepend('<div id=g_' + data.gameid + ' class="game game_received">game_received</div>');
+          $('#g_' + data.gameid).append('<button class=game_accept id=ga_' + data.gameid + '>accept</button>');
+          $('#g_' + data.gameid).append('<button class=game_decline id=gd_' + data.gameid + '>decline</button>');
+
+          $('#ga_' + data.gameid).click(function(){
+            client_io.emit('accept_game', { gameid: data.gameid } );
+            return false;
+          });
+
+          $('#gd_' + data.gameid).click(function(){
+            client_io.emit('decline_game', { gameid: data.gameid } );
+            return false;
+          });
+        });
+
+        client_io.on('game_canceled', function(data){
+        
+          var session_element = $('#g_' + data.gameid );
+          session_element.children().prop('disabled', true);
+          session_element.removeClass('game_sent');
+          session_element.removeClass('game_received');
+          session_element.removeClass('game_configuring');
+          session_element.removeClass('game_ready');
+          session_element.removeClass('game_insession');
+          session_element.addClass('game_canceled');
+          session_element.append('<button class=game_close id=gx_' + data.gameid + '>close</button>');
+
+          $('#gx_' + data.gameid).click(function(){
+            session_element.remove();
+          });
         });
 
         $('#sendchat').submit(function(){
-          // FIXME don't send empty string
-          client_io.emit('chat_message', { userid: '#{user.id}',
-                                           username: '#{user.username}',
-                                           msg: $('#m').val()});
-          $('#m').val('');
+          if ($('#m').val() != '') {
+            client_io.emit('chat_message', { userid: '#{user.id}',
+                                             username: assigned_username,
+                                             msg: $('#m').val() });
+            $('#m').val('');
+          }
           return false;
         });
 
-        client_io.emit('user_join', {userid: '#{user.id}', username: '#{user.username}'});
-
-
+        client_io.emit('user_join', { userid: '#{user.id}',
+                                      username: '#{user.username}',
+                                      color: -1 });
       });
       
 
