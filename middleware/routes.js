@@ -48,6 +48,11 @@ module.exports = function(app, passport) {
   });
 
   // FIXME protect this with authentication
+  app.get('/game1v1', function(req, res) {
+    res.render('game1v1');
+  });
+
+  // FIXME protect this with authentication
   app.get('/gameplay', function(req, res) {
     db.query(
       'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',

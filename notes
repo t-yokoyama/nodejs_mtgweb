@@ -64,14 +64,11 @@ TODO
  x write a python script to generate card insert queries and crawl for image files
 
  - implement a lobby
-   - chat window, userlist, challenge panel, 'challenge received' panel
-   - show username per connected user
+   x chat window, userlist, challenge panel, 'challenge received' panel
+   x show username per connected user
    - figure out how to get two users into the same room with their specified decks
-     - maybe create a state machine with socket.io where
-       1) user A chooses a deck/opponent (user B), sends duel request (goes into waiting mode)
-       2) user B receives a notification in a 'challenge received' popup
-       3) user B selects deck, sends accept (opens gameplay.html with both deck IDs)
-       4) user A receives accept (opens gameplay.html with both deck IDs)
+   - change the gameid to an unguessable string?
+   - make the 'game session' GUI on the client side pretty
    - disconnect socket when passport logout detected
      - https://github.com/jfromaniello/passport.socketio
      - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
@@ -92,8 +89,9 @@ TODO
  - research reasons to use jquery selector $("#blah") vs document.querySelector("#blah")
    - https://jsperf.com/jquery-vs-document-queryselector
  - split code into separate css/js/html files
+ - replace .attr() with .prop() throughout the code
 
 
- - ? make an internal database of cards (id, image...)
+ - x make an internal database of cards (id, image...)
  - ? decide how to animate transitions from opponent
 

@@ -1,0 +1,35 @@
+doctype html
+html
+  head
+    title 1v1 Game
+    script(src='https://code.jquery.com/jquery-1.9.1.min.js')
+    script(src='/socket.io/socket.io.js')
+    style.
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+
+  body
+  
+    h1 game1v1
+
+    script.
+
+      $( document ).ready(function() {
+
+        // FIXME extract the room id from the url and join that room on socket.io
+        alert(window.location.search);
+
+        var client_io = io('/game1v1');
+        
+        client_io.on('connect', function(data){
+          client_io.emit('join_room', { userid: 'blah' });
+        });
+
+        client_io.on('some_event', function(data){
+          // FIXME
+        });
+        
+
+      });
+

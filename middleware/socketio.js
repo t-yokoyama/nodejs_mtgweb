@@ -1,3 +1,5 @@
+var db = require('../database/db.js');
+
 module.exports = function(app, server) {
 
   var io = require('socket.io')(server);
@@ -11,7 +13,7 @@ module.exports = function(app, server) {
   var lobby_io = io.of('/lobby');
   lobby_io.on('connection', function(socket){
 
-    console.log('a client connected.');
+    console.log('a client connected to the lobby.');
 
 
 
@@ -58,7 +60,7 @@ module.exports = function(app, server) {
 
 
     socket.on('disconnect', function(){
-      console.log('a client disconnected.');
+      console.log('a client disconnected from the lobby.');
 
       var disconnect_uid = -1;
       var disconnect_uname = "UNINITIALIZED";
@@ -125,11 +127,15 @@ module.exports = function(app, server) {
       r_socket.emit('game_received', { gameid: gid });
 
       games[gid] = { sender_sid: socket.id,
+                     sender_did: -1,
+                     sender_state: 'CHALLENGE_SENT',
                      recipient_sid: recipient_sid,
-                     sender_state: 'game_sent',
-                     recipient_state: 'game_received' };
-                     
+                     recipient_did: -1,
+                     recipient_state: 'CHALLENGE_RECEIVED'
+      };
+
       // FIXME check for existing games between the two users and disallow multiple?
+      // FIXME add sideboard-pregame option checkbox
     });
 
 
@@ -164,6 +170,12 @@ module.exports = function(app, server) {
         
         delete games[data.gameid];
       }
+      else {
+        
+        // this will let a user locally close a session if they get disconnected from the server
+        // then reconnected- their game would have been removed from the games array
+        socket.emit('game_canceled', { gameid: data.gameid });
+      }
     });
 
 
@@ -186,6 +198,11 @@ module.exports = function(app, server) {
         
         delete games[data.gameid];
       }
+      else {
+        
+        // analogous to the 'cancel_game' socket message
+        socket.emit('game_canceled', { gameid: data.gameid });
+      }
     });
 
 
@@ -193,9 +210,86 @@ module.exports = function(app, server) {
     socket.on('accept_game', function(data) {
       console.log('game accepted (' + data.gameid + ').');
       
+      if (games[data.gameid]) {
+        var sender_sid = games[data.gameid].sender_sid
+        var s_socket = lobby_io.connected[sender_sid];
+        var sender_uname = users_by_sid[sender_sid].username;
+        var recipient_uname = users_by_sid[socket.id].username;
+
+        games[data.gameid].sender_state = 'CONFIGURING_GAME';
+        games[data.gameid].recipient_state = 'CONFIGURING_GAME';
+
+        // FIXME should this be broadcast to everyone?
+        socket.emit('sys_message', 'you have accepted user ' + sender_uname + '\'s challenge.');
+        s_socket.emit('sys_message', 'user ' + recipient_uname + ' has accepted your challenge.');
+
+        db.query(
+          'SELECT d.id, d.deckname FROM decks d WHERE d.user_id = $1::int',
+          [users_by_sid[socket.id].userid],
+          function(err, result) {
+            if (err) {
+              return console.error('error running query', err);
+            }
+            socket.emit('game_accepted', { gameid: data.gameid,
+                                           decks: result.rows });
+          }
+        );
+
+        db.query(
+          'SELECT d.id, d.deckname FROM decks d WHERE d.user_id = $1::int',
+          [users_by_sid[sender_sid].userid],
+          function(err, result) {
+            if (err) {
+              return console.error('error running query', err);
+            }
+            s_socket.emit('game_accepted', { gameid: data.gameid,
+                                             decks: result.rows });
+          }
+        );
+      }
+      
       // FIXME check against multiple duplicate requests (user may rapidclick)
     });
+    
+    
 
+    socket.on('configure_game', function(data) {
+      console.log('game configured (' + data.gameid + ').');
+
+      if (games[data.gameid]) {
+        var sender_sid = games[data.gameid].sender_sid
+        var recipient_sid = games[data.gameid].recipient_sid
+        var sender_uname = users_by_sid[sender_sid].username;
+        var recipient_uname = users_by_sid[recipient_sid].username;
+
+        if (socket.id == sender_sid) {
+          games[data.gameid].sender_did = data.deckid;
+          games[data.gameid].sender_state = 'CONFIGURED';
+          socket.emit('sys_message', 'you are ready for your game with user ' + recipient_uname + '.');
+          lobby_io.connected[recipient_sid].emit('sys_message', 'user ' + sender_uname + ' is ready for your game.');
+        }
+        else {
+          games[data.gameid].recipient_did = data.deckid;
+          games[data.gameid].recipient_state = 'CONFIGURED';
+          socket.emit('sys_message', 'you are ready for your game with user ' + sender_uname + '.');
+          lobby_io.connected[sender_sid].emit('sys_message', 'user ' + recipient_uname + ' is ready for your game.');
+        }
+        
+        // this will disable further deck selection on the client side
+        socket.emit('game_configured', { gameid: data.gameid });
+        
+        if (games[data.gameid].sender_state == 'CONFIGURED' &
+            games[data.gameid].recipient_state == 'CONFIGURED') {
+
+          games[data.gameid].sender_state = 'ROOM_OPENED';
+          games[data.gameid].recipient_state = 'ROOM_OPENED';
+
+          console.log('both players ready.');
+          lobby_io.connected[sender_sid].emit('open_room', { gameid: data.gameid } );
+          lobby_io.connected[recipient_sid].emit('open_room', { gameid: data.gameid } );
+        }
+      }
+    });
 
 
     // FIXME disconnect all user instances from chat when user logs out of site
@@ -203,9 +297,22 @@ module.exports = function(app, server) {
 
 
 
-  var gameplay_io = io.of('/gameplay');
-  gameplay_io.on('connection', function(socket){
-    // FIXME
+  var game1v1_io = io.of('/game1v1');
+  game1v1_io.on('connection', function(socket){
+
+    console.log('a client connected to a 1v1 game.');
+
+
+
+    socket.on('join_room', function(data) {
+      console.log('a user joined a room.');
+    });
+
+    socket.on('disconnect', function(){
+      console.log('a client disconnected from a 1v1 game.');
+    });
+    
+    
   });
 
 }

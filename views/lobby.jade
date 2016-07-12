@@ -35,8 +35,8 @@ html
       div.game_received { background-color: #ff0044; }
       div.game_configuring {}
       div.game_ready {}
-      div.game_insession {}
-      div.game_canceled { background-color: #aaaaaa; }
+      div.game_playing {}
+      div.game_canceled { background-color: #aaaabb; }
 
       button.challenge { float: right }
       button.game_accept {}
@@ -69,6 +69,12 @@ html
 
         // FIXME make the UI for the game sessions pretty instead of total garbage
 
+        client_io.on('connect', function(data){
+          client_io.emit('user_join', { userid: '#{user.id}',
+                                        username: '#{user.username}',
+                                        color: -1 });
+        });
+
         client_io.on('user_init', function(data){
         
             // when we joined the chat, the server may have taken our raw username and appended an instance number to it
@@ -94,12 +100,6 @@ html
             client_io.emit('initiate_game', { recipient_username: data.username });
             return false;
           });
-
-          // TODO: on the socketio.js end, receive the initiate_game request and route it to the proper opponent
-          // TODO: create a local pending session
-          // TODO: elsewhere on lobby.jade, receive the initiate_game request to create a session from the perspective of the opponent
-          // TODO: somehow assign an id to the game sessions locally and remotely so we know how to distinguish them downstream
-
         });
 
         client_io.on('user_exit', function(data){
@@ -110,57 +110,116 @@ html
           $('#messages').append('<li class=m_' + data.userid + '><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
           $('#chatmessages').animate({ scrollTop: $('#chatmessages')[0].scrollHeight}, 1000);
         });
-        
+
         client_io.on('sys_message', function(msg){
           $('#messages').append('<li class=system>' + msg + '</li>');
           $('#chatmessages').animate({ scrollTop: $('#chatmessages')[0].scrollHeight}, 1000);
         });
 
         client_io.on('game_sent', function(data){
-        
-          // FIXME make sure this adds the game in the leftmost position
-          $('#sessions').prepend('<div id=g_' + data.gameid + ' class="game game_sent">game_sent</div>');
-          $('#g_' + data.gameid).append('<button class=game_cancel id=gc_' + data.gameid + '>cancel</button>');
+          var $session = $('<div>').addClass('game game_sent').attr('id', 'g_' + data.gameid).html('game sent');
 
-          $('#gc_' + data.gameid).click(function(){
+          var $gcancel = $('<button>').addClass('game_cancel').attr('id', 'gc_' + data.gameid).html('cancel');
+          $gcancel.click(function(){
             client_io.emit('cancel_game', { gameid: data.gameid } );
             return false;
           });
+
+          $session.append($gcancel);
+          $('#sessions').prepend($session);
         });
 
         client_io.on('game_received', function(data){
-        
-          // FIXME make sure this adds the game in the leftmost position
-          $('#sessions').prepend('<div id=g_' + data.gameid + ' class="game game_received">game_received</div>');
-          $('#g_' + data.gameid).append('<button class=game_accept id=ga_' + data.gameid + '>accept</button>');
-          $('#g_' + data.gameid).append('<button class=game_decline id=gd_' + data.gameid + '>decline</button>');
+          var $session = $('<div>').addClass('game game_received').attr('id', 'g_' + data.gameid).html('game received');
 
-          $('#ga_' + data.gameid).click(function(){
+          var $gaccept = $('<button>').addClass('game_accept').attr('id', 'ga_' + data.gameid).html('accept');
+          $gaccept.click(function(){
             client_io.emit('accept_game', { gameid: data.gameid } );
             return false;
           });
 
-          $('#gd_' + data.gameid).click(function(){
+          var $gdecline = $('<button>').addClass('game_decline').attr('id', 'gd_' + data.gameid).html('decline');
+          $gdecline.click(function(){
             client_io.emit('decline_game', { gameid: data.gameid } );
             return false;
           });
+
+          $session.append($gaccept);
+          $session.append($gdecline);
+          $('#sessions').prepend($session);
         });
 
         client_io.on('game_canceled', function(data){
         
-          var session_element = $('#g_' + data.gameid );
-          session_element.children().prop('disabled', true);
-          session_element.removeClass('game_sent');
-          session_element.removeClass('game_received');
-          session_element.removeClass('game_configuring');
-          session_element.removeClass('game_ready');
-          session_element.removeClass('game_insession');
-          session_element.addClass('game_canceled');
-          session_element.append('<button class=game_close id=gx_' + data.gameid + '>close</button>');
+          var $session = $('#g_' + data.gameid );
+          $session.removeClass('game_sent');
+          $session.removeClass('game_received');
+          $session.removeClass('game_configuring');
+          $session.removeClass('game_ready');
+          $session.removeClass('game_insession');
+          $session.addClass('game_canceled');
 
-          $('#gx_' + data.gameid).click(function(){
-            session_element.remove();
+          $session.children().prop('disabled', true);
+          
+          var $gclose = $('<button>').addClass('game_close').attr('id', 'gx_' + data.gameid).html('close');
+          $gclose.click(function(){
+            $session.remove();
           });
+          
+          $session.append($gclose);
+        });
+
+        client_io.on('game_accepted', function(data){
+          var $session = $('#g_' + data.gameid );
+          $session.removeClass('game_sent');
+          $session.removeClass('game_received');
+          $session.addClass('game_configuring');
+
+          $session.children().remove();
+
+          var $gdselect = $('<select>').attr('id', 'gdselect_' + data.gameid);
+          for(var i = 0; i < data.decks.length; i++) {
+            $gdselect.append($('<option>').val(data.decks[i].id).html(data.decks[i].deckname));
+          }
+
+          var $gdsubmit = $('<button>').addClass('game_configure').attr('id', 'gdsubmit_' + data.gameid).html('submit');
+          $gdsubmit.click(function(){
+            client_io.emit('configure_game', { gameid: data.gameid,
+                                               deckid: $gdselect.val() } );
+            return false;
+          });
+
+          var $gcancel = $('<button>').addClass('game_cancel').attr('id', 'gc_' + data.gameid).html('cancel');
+          $gcancel.click(function(){
+            client_io.emit('cancel_game', { gameid: data.gameid } );
+            return false;
+          });
+
+          $session.append($gdselect);
+          $session.append($gdsubmit);
+          $session.append($gcancel);
+        });
+
+        client_io.on('game_configured', function(data){
+          var $session = $('#g_' + data.gameid );
+          $session.removeClass('game_configuring');
+          $session.addClass('game_ready');
+
+          // disable the selection widgets
+          $('#gdselect_' + data.gameid).prop('disabled', true);
+          $('#gdsubmit_' + data.gameid).prop('disabled', true);
+        });
+
+        client_io.on('open_room', function(data){
+          var $session = $('#g_' + data.gameid );
+          $session.removeClass('game_ready');
+          $session.addClass('game_playing');
+
+          $('#gdselect_' + data.gameid).remove();
+          $('#gdsubmit_' + data.gameid).remove();
+          
+          // FIXME display the room link
+          $session.prepend('<a href="game1v1?room=' + data.gameid + '">room link</a>');
         });
 
         $('#sendchat').submit(function(){
@@ -173,9 +232,6 @@ html
           return false;
         });
 
-        client_io.emit('user_join', { userid: '#{user.id}',
-                                      username: '#{user.username}',
-                                      color: -1 });
       });
       
 
