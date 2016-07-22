@@ -74,6 +74,7 @@ TODO
      - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
      - http://stackoverflow.com/questions/13095418/how-to-use-passport-with-express-and-socket-io
 
+ - upload the 'correct' version of back.jpg to cloud9
 
 
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)

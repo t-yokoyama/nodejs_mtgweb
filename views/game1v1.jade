@@ -1,35 +1,69 @@
 doctype html
 html
+
   head
+
     title 1v1 Game
+
+    link(href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css", rel="stylesheet")
+    link(href="stylesheets/gameplay.css", rel="stylesheet")
+
+    script(src="https://cdn.socket.io/socket.io-1.2.0.js")
     script(src='https://code.jquery.com/jquery-1.9.1.min.js')
-    script(src='/socket.io/socket.io.js')
-    style.
+    script(src="https://code.jquery.com/ui/1.11.4/jquery-ui.js")
 
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-
-  body
-  
-    h1 game1v1
+    script(src="javascripts/bootstrap-contextmenu.js")
+    script(src="javascripts/gameplay.js")
 
     script.
 
-      $( document ).ready(function() {
+      $(document).ready(function() {
 
-        // FIXME extract the room id from the url and join that room on socket.io
-        alert(window.location.search);
+        initGlobals();
+        
+        // FIXME replace this with a loop that iterates over query results
+        generateCard("images/2090031.jpg");
+        generateCard("images/2090711.jpg");
+        generateCard("images/2090651.jpg");
+        enableInteractivity();
 
         var client_io = io('/game1v1');
         
         client_io.on('connect', function(data){
-          client_io.emit('join_room', { userid: 'blah' });
-        });
 
-        client_io.on('some_event', function(data){
-          // FIXME
+          // extract the room id from the url and join that room
+          var params = {};
+          if (location.search) {
+            var parts = location.search.substring(1).split('&');
+            for (var i = 0; i < parts.length; i++) {
+              var nv = parts[i].split('=');
+              if (!nv[0]) continue;
+              params[nv[0]] = nv[1] || true;
+            }
+          }
+          
+          // FIXME add error checking for room id is not found
+          client_io.emit('join_room', { roomid: params.room });
         });
-        
-
       });
+
+
+  body
+
+    div(id="window")
+      div(id="battlefield_wrapper")
+        div(class="battlefield", id="opp_battlefield") opp battlefield
+        div(class="battlefield", id="my_battlefield") my battlefield
+          div(class="zone", id="library") library
+          div(class="zone", id="graveyard") graveyard
+          div(class="zone", id="exile") exile
+          div(class="zone", id="hand") hand
+
+    div(id="rcmenu_forcards")
+      ul(class="dropdown-menu", role="menu")
+        li: a(tabindex="-1") Action
+        li: a(tabindex="-1") Another action
+        li: a(tabindex="-1") Something else here
+        li(class="divider")
+        li: a(tabindex="-1") Separated link
 

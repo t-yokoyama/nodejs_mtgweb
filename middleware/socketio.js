@@ -4,6 +4,7 @@ module.exports = function(app, server) {
 
   var io = require('socket.io')(server);
 
+  // FIXME prefix these with g_
   var gameid_counter = 0;
   var users_by_sid = {};        // elements: { userid, username, color }
   var sockids_by_uname = {};
@@ -149,12 +150,12 @@ module.exports = function(app, server) {
         var sid1;
         var sid2;
         if (socket.id == games[data.gameid].sender_sid) {
-          sid1 = games[data.gameid].sender_sid
-          sid2 = games[data.gameid].recipient_sid
+          sid1 = games[data.gameid].sender_sid;
+          sid2 = games[data.gameid].recipient_sid;
         }
         else {
-          sid1 = games[data.gameid].recipient_sid
-          sid2 = games[data.gameid].sender_sid
+          sid1 = games[data.gameid].recipient_sid;
+          sid2 = games[data.gameid].sender_sid;
         }
         var uname1 = users_by_sid[sid1].username;
         var uname2 = users_by_sid[sid2].username;
@@ -284,6 +285,7 @@ module.exports = function(app, server) {
           games[data.gameid].sender_state = 'ROOM_OPENED';
           games[data.gameid].recipient_state = 'ROOM_OPENED';
 
+          // FIXME consider using the gameid as a seed to produce a longer ascii guid for the room name
           console.log('both players ready.');
           lobby_io.connected[sender_sid].emit('open_room', { gameid: data.gameid } );
           lobby_io.connected[recipient_sid].emit('open_room', { gameid: data.gameid } );
@@ -305,14 +307,20 @@ module.exports = function(app, server) {
 
 
     socket.on('join_room', function(data) {
-      console.log('a user joined a room.');
+      console.log('a user joined room ' + data.roomid);
+
+      socket.room = data.roomid;
+      socket.join(data.roomid);
     });
+
+
 
     socket.on('disconnect', function(){
       console.log('a client disconnected from a 1v1 game.');
+
+      socket.leave(socket.room);
     });
-    
-    
+
   });
 
 }

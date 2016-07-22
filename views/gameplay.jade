@@ -9,8 +9,8 @@ html
     link(href="stylesheets/gameplay.css", rel="stylesheet")
 
     script(src="https://cdn.socket.io/socket.io-1.2.0.js")
-    script(src="http://code.jquery.com/jquery-1.11.1.js")
-    script(src="http://code.jquery.com/ui/1.11.4/jquery-ui.js")
+    script(src="https://code.jquery.com/jquery-1.11.1.js")
+    script(src="https://code.jquery.com/ui/1.11.4/jquery-ui.js")
 
     script(src="javascripts/bootstrap-contextmenu.js")
     script(src="javascripts/gameplay.js")
@@ -24,6 +24,7 @@ html
         - var n = 0
         while n < card.qty
           | generateCard("#{card.imageurl}");
+          | alert("#{card.imageurl}");
           - n++
 
       |   enableInteractivity();

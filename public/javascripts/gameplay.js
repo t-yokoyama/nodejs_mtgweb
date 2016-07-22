@@ -25,7 +25,7 @@ function generateCard(image) {
   var $cardCanvas = $("#" + cid);
   var $cardHandle = $("#h" + cid);
   $cardCanvas.css("zIndex", 10); // FIXME
-  $cardCanvas.css("background-image", "url(images/cards/back.jpg)");
+  $cardCanvas.css("background-image", "url(images/back.jpg)");
 
   var cardEntry = {
     canvas : $cardCanvas,
@@ -162,7 +162,7 @@ function moveCardToZone(cid, toZone, shiftHeld) {
 
   // toggle face up/down as appropriate
   if (g_directory[cid].faceUp && !turnFaceUp) {
-    $cardCanvas.css("background-image", "url(images/cardback.jpg)");
+    $cardCanvas.css("background-image", "url(images/back.jpg)");
     g_directory[cid].faceUp = false;
   }
   else if (!g_directory[cid].faceUp && turnFaceUp) {
@@ -339,29 +339,7 @@ function initGlobals() {
   window.g_rcCardId = -1;
 }
 
-/*
-  // temporary code to load some dummy cards
-  generateCard(0, "images/seraph_of_dawn.jpg");
-  generateCard(1, "images/wild_hunger.jpg");
-  generateCard(2, "images/myr_sire.jpg");
-  generateCard(3, "images/affa_guard_hound.jpg");
-  generateCard(4, "images/lightning_bolt.jpg");
-  generateCard(5, "images/resounding_wave.jpg");
-  generateCard(6, "images/forest.jpg");
-  generateCard(7, "images/affa_guard_hound.jpg");
-  generateCard(8, "images/lightning_bolt.jpg");
-  generateCard(9, "images/resounding_wave.jpg");
-  generateCard(10, "images/seraph_of_dawn.jpg");
-  generateCard(11, "images/wild_hunger.jpg");
-  generateCard(12, "images/myr_sire.jpg");
-  generateCard(13, "images/affa_guard_hound.jpg");
-  generateCard(14, "images/lightning_bolt.jpg");
-  generateCard(15, "images/resounding_wave.jpg");        
-  generateCard(16, "images/forest_full.jpg");
-  generateCard(17, "images/island_full.jpg");
-  generateCard(18, "images/mountain_full.jpg");
-  generateCard(19, "images/forest_full.jpg");
-*/
+
 
 function enableInteractivity() {
 

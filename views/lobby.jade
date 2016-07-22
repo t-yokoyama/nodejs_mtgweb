@@ -80,9 +80,10 @@ html
             // when we joined the chat, the server may have taken our raw username and appended an instance number to it
             // so we set our local username to this returned value
             assigned_username = data.username
-            $('#users').append('<li id=u_' + assigned_username + '>' + assigned_username + '</li>');
             $('html > head').append('<style>#u_' + assigned_username + ' { color: ' + data.color + '; }</style>');
             $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
+            var $guser = $('<li>').attr('id', 'u_' + assigned_username).html(assigned_username);
+            $('#users').append($guser);
             
             // enable the message send button now
             $('#sendbutton').prop('disabled', false);
@@ -90,16 +91,22 @@ html
 
         client_io.on('user_join', function(data){
         
-          $('#users').append('<li id=u_' + data.username + '>' + data.username + ' <button class=challenge id=c_' + data.userid + '>challenge</button></li>');
           $('html > head').append('<style>#u_' + data.username + ' { color: ' + data.color + '; }</style>');
           $('html > head').append('<style>.m_' + data.userid + ' { color: ' + data.color + '; }</style>');
+  
+          var $guser = $('<li>').attr('id', 'u_' + data.username).html(data.username);
 
-          // FIXME should we disable users challenging other instances of themselves?
+          // add challenge button, but disable users from challenging other instances of themselves
+          if (data.userid != '#{user.id}') {
+            var $gcbutton = $('<button>').addClass('challenge').attr('id', 'c_' + data.userid).html('challenge');
+            $gcbutton.click(function(){
+              client_io.emit('initiate_game', { recipient_username: data.username });
+              return false;
+            });
+            $guser.append($gcbutton);
+          }
 
-          $('#c_' + data.userid).click(function(){
-            client_io.emit('initiate_game', { recipient_username: data.username });
-            return false;
-          });
+          $('#users').append($guser);
         });
 
         client_io.on('user_exit', function(data){
@@ -218,8 +225,7 @@ html
           $('#gdselect_' + data.gameid).remove();
           $('#gdsubmit_' + data.gameid).remove();
           
-          // FIXME display the room link
-          $session.prepend('<a href="game1v1?room=' + data.gameid + '">room link</a>');
+          $session.prepend('<a href="game1v1?room=' + data.gameid + '" target="_blank">room link</a>');
         });
 
         $('#sendchat').submit(function(){
