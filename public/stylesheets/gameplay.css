@@ -45,6 +45,16 @@ div.zone {
   background-color: #cccccc;
 }
 
+div.opp_zone {
+  position: absolute;
+  height: 130px;
+  width: 100px;
+  padding: 0px;
+  border-width: 1px;
+  border-style: solid;
+  background-color: #cccccc;
+}
+
 div.zone_hover {
   outline: 4px solid #ff0000;
 }
@@ -58,6 +68,10 @@ div#hand {
   width: 100%;
   bottom: 0px;
 }
+
+div#opp_library { bottom: 20px; left: 140px; }
+div#opp_graveyard { bottom: 20px; left: 20px; }
+div#opp_exile { bottom: 20px; right: 20px; }
 
 div.cardhandle {
   position: absolute;

@@ -67,6 +67,22 @@ TODO
    x chat window, userlist, challenge panel, 'challenge received' panel
    x show username per connected user
    - figure out how to get two users into the same room with their specified decks
+
+     1. server: create a local card array for both players with status (position, tap, flip, etc.)
+     2. client: enter game room, request card data by userid, roomid
+     3. server: based on userid, provided, return full set of both decks to client
+     4. client: receive card data via socket.io event, call generateCard repeatedly
+
+     5. client: when user moves cards, send move event to server via socket.io event
+     6. server: receive move event, propogate to all clients, transforming position based on perspective
+
+9/1/16: 
+   - add server-side data structures for representing/remembering cards and their order in each game zone
+   - have the server-side data structure only remember x/y position of cards on battlefield 
+     - when setting up cards in zones at room open, use moveCardToZone() to automatically handle the x/y positioning of cards not on battlefield
+
+
+
    - change the gameid to an unguessable string?
    - make the 'game session' GUI on the client side pretty
    - disconnect socket when passport logout detected
@@ -76,7 +92,7 @@ TODO
 
  - upload the 'correct' version of back.jpg to cloud9
 
-
+ - fix the right click menu (broken during port to c9)
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die

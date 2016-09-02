@@ -43,6 +43,7 @@ html
           }
           
           // FIXME add error checking for room id is not found
+          alert(params.room);
           client_io.emit('join_room', { roomid: params.room });
         });
       });
@@ -53,6 +54,9 @@ html
     div(id="window")
       div(id="battlefield_wrapper")
         div(class="battlefield", id="opp_battlefield") opp battlefield
+          div(class="opp_zone", id="opp_library") opp_library
+          div(class="opp_zone", id="opp_graveyard") opp_graveyard
+          div(class="opp_zone", id="opp_exile") opp_exile
         div(class="battlefield", id="my_battlefield") my battlefield
           div(class="zone", id="library") library
           div(class="zone", id="graveyard") graveyard

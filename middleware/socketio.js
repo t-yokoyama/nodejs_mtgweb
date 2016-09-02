@@ -132,8 +132,9 @@ module.exports = function(app, server) {
                      sender_state: 'CHALLENGE_SENT',
                      recipient_sid: recipient_sid,
                      recipient_did: -1,
-                     recipient_state: 'CHALLENGE_RECEIVED'
-      };
+                     recipient_state: 'CHALLENGE_RECEIVED',
+                     gamestate: [ { cards: [], hand: [], library: [], graveyard: [], exile: [] } , 
+                                  { cards: [], hand: [], library: [], graveyard: [], exile: [] } ] };
 
       // FIXME check for existing games between the two users and disallow multiple?
       // FIXME add sideboard-pregame option checkbox
@@ -258,8 +259,9 @@ module.exports = function(app, server) {
       console.log('game configured (' + data.gameid + ').');
 
       if (games[data.gameid]) {
-        var sender_sid = games[data.gameid].sender_sid
-        var recipient_sid = games[data.gameid].recipient_sid
+        
+        var sender_sid = games[data.gameid].sender_sid;
+        var recipient_sid = games[data.gameid].recipient_sid;
         var sender_uname = users_by_sid[sender_sid].username;
         var recipient_uname = users_by_sid[recipient_sid].username;
 
@@ -282,13 +284,66 @@ module.exports = function(app, server) {
         if (games[data.gameid].sender_state == 'CONFIGURED' &
             games[data.gameid].recipient_state == 'CONFIGURED') {
 
-          games[data.gameid].sender_state = 'ROOM_OPENED';
-          games[data.gameid].recipient_state = 'ROOM_OPENED';
+          db.query(
+            'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+            [games[data.gameid].sender_did],
+            function(err, result1) {
+              if (err) {
+                return console.error('error running query', err);
+              }
+              var cid1 = 0;
+              for(var i = 0; i < result1.rows.length; i++) {
+                for(var j = 0; j < result1.rows[i].qty; j++) {
+                  games[data.gameid].gamestate[0].cards[cid1] = { imageurl: result1.rows[i].imageurl, 
+                                                                  x: 0,
+                                                                  y: 0,
+                                                                  tapped: false,
+                                                                  flipped: false,
+                                                                  transformed: false,
+                                                                  counters: 0
+                                                                };
 
-          // FIXME consider using the gameid as a seed to produce a longer ascii guid for the room name
-          console.log('both players ready.');
-          lobby_io.connected[sender_sid].emit('open_room', { gameid: data.gameid } );
-          lobby_io.connected[recipient_sid].emit('open_room', { gameid: data.gameid } );
+                  // FIXME initialize the library array and shuffle it
+
+                  cid1++;
+                }
+              }
+
+              db.query(
+                'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+                [games[data.gameid].recipient_did],
+                function(err, result2) {
+                  if (err) {
+                    return console.error('error running query', err);
+                  }
+                  var cid2 = 0;
+                  for(var i = 0; i < result2.rows.length; i++) {
+                    for(var j = 0; j < result2.rows[i].qty; j++) {
+                      games[data.gameid].gamestate[1].cards[cid2] = { imageurl: result2.rows[i].imageurl, 
+                                                                      x: 0,
+                                                                      y: 0,
+                                                                      tapped: false,
+                                                                      flipped: false,
+                                                                      transformed: false,
+                                                                      counters: 0
+                                                                    };
+                      cid2++;
+                    }
+                  }
+
+                  // both decks have been loaded now, so give the OK to both players to enter the room
+                  games[data.gameid].sender_state = 'ROOM_OPENED';
+                  games[data.gameid].recipient_state = 'ROOM_OPENED';
+
+                  // FIXME consider using the gameid as a seed to produce a longer ascii guid for the room name
+                  console.log('both players ready.');
+                  lobby_io.connected[sender_sid].emit('open_room', { gameid: data.gameid } );
+                  lobby_io.connected[recipient_sid].emit('open_room', { gameid: data.gameid } );
+
+                }
+              ); // recipient deck db query
+            }
+          ); // sender deck db query
         }
       }
     });
