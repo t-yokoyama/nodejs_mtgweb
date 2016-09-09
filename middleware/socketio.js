@@ -5,7 +5,7 @@ module.exports = function(app, server) {
   var io = require('socket.io')(server);
 
   // FIXME prefix these with g_
-  var gameid_counter = 0;
+  var gameid_counter = 1000;
   var users_by_sid = {};        // elements: { userid, username, color }
   var sockids_by_uname = {};
   var dupdata_by_uid = {};      // elements: { num_sockets, colorid }
@@ -90,11 +90,11 @@ module.exports = function(app, server) {
       // FIXME if we do, we need to add checks in all the state machine logic to check and allow for socket ids not being found in server data structures
       for (var gid in games) {
         var survivor_sid = -1;
-        if (socket.id == games[gid].sender_sid) {
-          survivor_sid = games[gid].recipient_sid;
+        if (socket.id == games[gid].sender_lobby_sid) {
+          survivor_sid = games[gid].recipient_lobby_sid;
         }
-        else if (socket.id == games[gid].recipient_sid) {
-          survivor_sid = games[gid].sender_sid;
+        else if (socket.id == games[gid].recipient_lobby_sid) {
+          survivor_sid = games[gid].sender_lobby_sid;
         }
         if (survivor_sid != -1) {
           lobby_io.connected[survivor_sid].emit('sys_message', 'automatically canceling game with user ' + disconnect_uname + ' due to user disconnect.');
@@ -117,8 +117,8 @@ module.exports = function(app, server) {
       // FIXME add error checks for failing to find in arrays?
 
       var sender_username = users_by_sid[socket.id].username;
-      var recipient_sid = sockids_by_uname[data.recipient_username];
-      var r_socket = lobby_io.connected[recipient_sid];
+      var recipient_lobby_sid = sockids_by_uname[data.recipient_username];
+      var r_socket = lobby_io.connected[recipient_lobby_sid];
 
       // FIXME should this be broadcast to everyone?
       socket.emit('sys_message', 'you have challenged user ' + data.recipient_username + ' to a game.');
@@ -127,12 +127,19 @@ module.exports = function(app, server) {
       socket.emit('game_sent', { gameid: gid });
       r_socket.emit('game_received', { gameid: gid });
 
-      games[gid] = { sender_sid: socket.id,
+      var sender_uid = users_by_sid[socket.id].userid;
+      var recipient_uid = users_by_sid[recipient_lobby_sid].userid;
+
+      games[gid] = { sender_uid: sender_uid,
+                     sender_lobby_sid: socket.id,
                      sender_did: -1,
                      sender_state: 'CHALLENGE_SENT',
-                     recipient_sid: recipient_sid,
+                     sender_game_sid: -1,
+                     recipient_uid: recipient_uid,
+                     recipient_lobby_sid: recipient_lobby_sid,
                      recipient_did: -1,
                      recipient_state: 'CHALLENGE_RECEIVED',
+                     recipient_game_sid: -1,
                      gamestate: [ { cards: [], hand: [], library: [], graveyard: [], exile: [] } , 
                                   { cards: [], hand: [], library: [], graveyard: [], exile: [] } ] };
 
@@ -150,13 +157,13 @@ module.exports = function(app, server) {
         // determine which side sent the cancel request to construct the proper system messages        
         var sid1;
         var sid2;
-        if (socket.id == games[data.gameid].sender_sid) {
-          sid1 = games[data.gameid].sender_sid;
-          sid2 = games[data.gameid].recipient_sid;
+        if (socket.id == games[data.gameid].sender_lobby_sid) {
+          sid1 = games[data.gameid].sender_lobby_sid;
+          sid2 = games[data.gameid].recipient_lobby_sid;
         }
         else {
-          sid1 = games[data.gameid].recipient_sid;
-          sid2 = games[data.gameid].sender_sid;
+          sid1 = games[data.gameid].recipient_lobby_sid;
+          sid2 = games[data.gameid].sender_lobby_sid;
         }
         var uname1 = users_by_sid[sid1].username;
         var uname2 = users_by_sid[sid2].username;
@@ -186,9 +193,9 @@ module.exports = function(app, server) {
       console.log('game declined (' + data.gameid + ').');
 
       if (games[data.gameid]) {
-        var sender_sid = games[data.gameid].sender_sid
-        var s_socket = lobby_io.connected[sender_sid];
-        var sender_uname = users_by_sid[sender_sid].username;
+        var sender_lobby_sid = games[data.gameid].sender_lobby_sid;
+        var s_socket = lobby_io.connected[sender_lobby_sid];
+        var sender_uname = users_by_sid[sender_lobby_sid].username;
         var recipient_uname = users_by_sid[socket.id].username;
 
         // FIXME should this be broadcast to everyone?
@@ -213,9 +220,9 @@ module.exports = function(app, server) {
       console.log('game accepted (' + data.gameid + ').');
       
       if (games[data.gameid]) {
-        var sender_sid = games[data.gameid].sender_sid
-        var s_socket = lobby_io.connected[sender_sid];
-        var sender_uname = users_by_sid[sender_sid].username;
+        var sender_lobby_sid = games[data.gameid].sender_lobby_sid;
+        var s_socket = lobby_io.connected[sender_lobby_sid];
+        var sender_uname = users_by_sid[sender_lobby_sid].username;
         var recipient_uname = users_by_sid[socket.id].username;
 
         games[data.gameid].sender_state = 'CONFIGURING_GAME';
@@ -239,7 +246,7 @@ module.exports = function(app, server) {
 
         db.query(
           'SELECT d.id, d.deckname FROM decks d WHERE d.user_id = $1::int',
-          [users_by_sid[sender_sid].userid],
+          [users_by_sid[sender_lobby_sid].userid],
           function(err, result) {
             if (err) {
               return console.error('error running query', err);
@@ -260,22 +267,22 @@ module.exports = function(app, server) {
 
       if (games[data.gameid]) {
         
-        var sender_sid = games[data.gameid].sender_sid;
-        var recipient_sid = games[data.gameid].recipient_sid;
-        var sender_uname = users_by_sid[sender_sid].username;
-        var recipient_uname = users_by_sid[recipient_sid].username;
+        var sender_lobby_sid = games[data.gameid].sender_lobby_sid;
+        var recipient_lobby_sid = games[data.gameid].recipient_lobby_sid;
+        var sender_uname = users_by_sid[sender_lobby_sid].username;
+        var recipient_uname = users_by_sid[recipient_lobby_sid].username;
 
-        if (socket.id == sender_sid) {
+        if (socket.id == sender_lobby_sid) {
           games[data.gameid].sender_did = data.deckid;
           games[data.gameid].sender_state = 'CONFIGURED';
           socket.emit('sys_message', 'you are ready for your game with user ' + recipient_uname + '.');
-          lobby_io.connected[recipient_sid].emit('sys_message', 'user ' + sender_uname + ' is ready for your game.');
+          lobby_io.connected[recipient_lobby_sid].emit('sys_message', 'user ' + sender_uname + ' is ready for your game.');
         }
         else {
           games[data.gameid].recipient_did = data.deckid;
           games[data.gameid].recipient_state = 'CONFIGURED';
           socket.emit('sys_message', 'you are ready for your game with user ' + sender_uname + '.');
-          lobby_io.connected[sender_sid].emit('sys_message', 'user ' + recipient_uname + ' is ready for your game.');
+          lobby_io.connected[sender_lobby_sid].emit('sys_message', 'user ' + recipient_uname + ' is ready for your game.');
         }
         
         // this will disable further deck selection on the client side
@@ -302,9 +309,7 @@ module.exports = function(app, server) {
                                                                   transformed: false,
                                                                   counters: 0
                                                                 };
-
-                  // FIXME initialize the library array and shuffle it
-
+                  games[data.gameid].gamestate[0].library.push(cid1);
                   cid1++;
                 }
               }
@@ -327,6 +332,7 @@ module.exports = function(app, server) {
                                                                       transformed: false,
                                                                       counters: 0
                                                                     };
+                      games[data.gameid].gamestate[1].library.push(cid2);
                       cid2++;
                     }
                   }
@@ -337,8 +343,8 @@ module.exports = function(app, server) {
 
                   // FIXME consider using the gameid as a seed to produce a longer ascii guid for the room name
                   console.log('both players ready.');
-                  lobby_io.connected[sender_sid].emit('open_room', { gameid: data.gameid } );
-                  lobby_io.connected[recipient_sid].emit('open_room', { gameid: data.gameid } );
+                  lobby_io.connected[sender_lobby_sid].emit('open_room', { gameid: data.gameid } );
+                  lobby_io.connected[recipient_lobby_sid].emit('open_room', { gameid: data.gameid } );
 
                 }
               ); // recipient deck db query
@@ -366,6 +372,37 @@ module.exports = function(app, server) {
 
       socket.room = data.roomid;
       socket.join(data.roomid);
+
+      var role_index = -1;
+      if (data.userid == games[data.roomid].sender_uid) {
+        if (games[data.roomid].sender_game_sid != -1 & socket.id != games[data.roomid].sender_game_sid) {
+          console.log('transferring game control to a new client and disconnecting the old one.');
+          
+
+          // FIXME this is busted
+          // game1v1_io.sockets.connected[games[data.roomid].sender_game_sid].disconnect();
+          // io.to(games[data.roomid].sender_game_sid).disconnect();
+        }
+        games[data.roomid].sender_game_sid = socket.id;
+        role_index = 0;
+      }
+      else if (data.userid == games[data.roomid].recipient_uid) {
+        if (games[data.roomid].recipient_game_sid != -1 & socket.id != games[data.roomid].recipient_game_sid) {
+          console.log('transferring game control to a new client and disconnecting the old one.');
+
+
+          // FIXME this is busted
+          // game1v1_io.sockets.connected[games[data.roomid].recipient_game_sid].disconnect();
+          // io.to(games[data.roomid].recipient_game_sid).disconnect();
+        }
+        games[data.roomid].recipient_game_sid = socket.id;
+        role_index = 1;
+      }
+      
+      // FIXME disconnect any other sockets with the same uid to prevent multiple sockets controlling the state of a player
+
+      socket.emit('initialize_gamestate', { gamestate: games[data.roomid].gamestate,
+                                            role: role_index });
     });
 
 

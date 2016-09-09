@@ -29,7 +29,7 @@ html
 
         var client_io = io('/game1v1');
         
-        client_io.on('connect', function(data){
+        client_io.on('connect', function(data) {
 
           // extract the room id from the url and join that room
           var params = {};
@@ -43,9 +43,15 @@ html
           }
           
           // FIXME add error checking for room id is not found
-          alert(params.room);
-          client_io.emit('join_room', { roomid: params.room });
+          // FIXME debugging line: alert(params.room);
+          client_io.emit('join_room', { userid: '#{user.id}',
+                                        roomid: params.room });
         });
+        
+        client_io.on('initialize_gamestate', function(data) {
+          alert(data.role);
+        });
+        
       });
 
 

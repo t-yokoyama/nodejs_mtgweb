@@ -49,7 +49,7 @@ module.exports = function(app, passport) {
 
   // FIXME protect this with authentication
   app.get('/game1v1', function(req, res) {
-    res.render('game1v1');
+    res.render('game1v1', { user: req.user });
   });
 
   // FIXME protect this with authentication
