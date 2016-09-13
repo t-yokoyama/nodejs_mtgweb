@@ -48,8 +48,17 @@ html
                                         roomid: params.room });
         });
         
+        client_io.on('duplicate_user_connect', function() {
+          alert('You have entered the room in a separate window, disconnecting this instance.');
+          
+          // FIXME test to make sure this actually severs the socket connection
+          client_io.disconnect();
+        });
+
         client_io.on('initialize_gamestate', function(data) {
-          alert(data.role);
+        
+          // FIXME iterate over all the cards in the data.gamestate, assigning controllable or not depending on data.role
+          // alert(data.role);
         });
         
       });

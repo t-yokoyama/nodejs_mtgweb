@@ -73,21 +73,20 @@ TODO
      4. client: receive card data via socket.io event, call generateCard repeatedly
      5. client: when user moves cards, send move event to server via socket.io event
      6. server: receive move event, propogate to all clients, transforming position based on perspective
+ x add server-side data structures for representing/remembering cards and their order in each game zone
+ x when a second instance of the same user connects to a game room, server-side force disconnect the old one
 
 
+9/13/16: 
+ - make generateCard accept a boolean for if the card is controllable or nothing (client-side)
+ - make generateCard display cards upside-down if they are not our cards
+ - in the initialize_gamestate event client-side, iterate over all the cards and call generateCard on them as appropriate
 
-9/1/16: 
- - add server-side data structures for representing/remembering cards and their order in each game zone
- - have the server-side data structure only remember x/y position of cards on battlefield 
-   - when setting up cards in zones at room open, use moveCardToZone() to automatically handle the x/y positioning of cards not on battlefield
-
- - make the login page only accessible if no user is logged in, show the profile/dashboard page instead if user is logged in
-
- - when a second instance of the same user connects to a game room, server-side force disconnect the old one
 
 
 
  MAJOR TODO ITEMS
+ - make the login page only accessible if no user is logged in, show the profile/dashboard page instead if user is logged in
  - disconnect socket when passport logout detected
    - https://github.com/jfromaniello/passport.socketio
    - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io

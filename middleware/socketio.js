@@ -377,11 +377,7 @@ module.exports = function(app, server) {
       if (data.userid == games[data.roomid].sender_uid) {
         if (games[data.roomid].sender_game_sid != -1 & socket.id != games[data.roomid].sender_game_sid) {
           console.log('transferring game control to a new client and disconnecting the old one.');
-          
-
-          // FIXME this is busted
-          // game1v1_io.sockets.connected[games[data.roomid].sender_game_sid].disconnect();
-          // io.to(games[data.roomid].sender_game_sid).disconnect();
+          game1v1_io.connected[games[data.roomid].sender_game_sid].emit('duplicate_user_connect');
         }
         games[data.roomid].sender_game_sid = socket.id;
         role_index = 0;
@@ -389,11 +385,7 @@ module.exports = function(app, server) {
       else if (data.userid == games[data.roomid].recipient_uid) {
         if (games[data.roomid].recipient_game_sid != -1 & socket.id != games[data.roomid].recipient_game_sid) {
           console.log('transferring game control to a new client and disconnecting the old one.');
-
-
-          // FIXME this is busted
-          // game1v1_io.sockets.connected[games[data.roomid].recipient_game_sid].disconnect();
-          // io.to(games[data.roomid].recipient_game_sid).disconnect();
+          game1v1_io.connected[games[data.roomid].recipient_game_sid].emit('duplicate_user_connect');
         }
         games[data.roomid].recipient_game_sid = socket.id;
         role_index = 1;
