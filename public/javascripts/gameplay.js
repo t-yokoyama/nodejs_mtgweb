@@ -1,5 +1,5 @@
 
-function generateCard(image) {
+function generateCard(p_owned, p_image, p_x, p_y, p_tapped, p_flipped, p_transformed, p_counters) {
 
   // 'static' counter for incrementing card IDs
   if (typeof generateCard.numGenerated == 'undefined') {
@@ -11,7 +11,12 @@ function generateCard(image) {
   // outer card element for positional changes
   var handleElement = document.createElement("div");
   handleElement.id = "h" + cid;
-  handleElement.setAttribute("class", "cardhandle card_own rcmenu_target");
+  if (p_owned) {
+    handleElement.setAttribute("class", "cardhandle cardhandle_owned rcmenu_target");
+  }
+  else {
+    handleElement.setAttribute("class", "cardhandle cardhandle_upsidedown");
+  }
 
   // inner card element for visual changes
   var canvasElement = document.createElement("div");
@@ -20,29 +25,49 @@ function generateCard(image) {
   canvasElement.setAttribute("data-toggle", "context");
 
   handleElement.appendChild(canvasElement);
-  document.getElementById("my_battlefield").appendChild(handleElement);
+  if (p_owned) {
+    document.getElementById("my_battlefield").appendChild(handleElement);
+  }
+  else {
+    document.getElementById("opp_battlefield").appendChild(handleElement);
+  }
 
   var $cardCanvas = $("#" + cid);
   var $cardHandle = $("#h" + cid);
   $cardCanvas.css("zIndex", 10); // FIXME
-  $cardCanvas.css("background-image", "url(images/back.jpg)");
+  $cardCanvas.css("background-image", "url(" + p_image + ")");
+
+  // FIXME do we need a separate member variable for morphed cards? or does faceUp suffice?
 
   var cardEntry = {
     canvas : $cardCanvas,
     handle : $cardHandle,
-    imgSrc : "url(" + image + ")",
-    zone : ZoneEnum.LIBRARY,
+    imgSrc : "url(" + p_image + ")",
+    owned: p_owned,
+    zone : ZoneEnum.BATTLEFIELD,
     faceUp : false,
-    tapped : false,
-    flipped : false,
-    transformed : false,
-    numCounters : 0
+    tapped : p_tapped,
+    flipped : p_flipped,
+    transformed : p_transformed,
+    numCounters : p_counters
   };
-
+  
   g_directory.push(cardEntry);
-  g_library.push(cid);
 
-  updateCardPosition(cid, ZoneEnum.LIBRARY);
+  // FIXME apply visual effects of flipped/transformed/morphed etc here
+
+  if (p_owned) {
+    $cardHandle.css("top", p_y);
+    $cardHandle.css("bottom", "auto");
+    $cardHandle.css("left", p_x);
+    $cardHandle.css("right", "auto");
+  }
+  else {
+    $cardHandle.css("top", "auto");
+    $cardHandle.css("bottom", p_y);
+    $cardHandle.css("left", p_x);
+    $cardHandle.css("right", "auto");
+  }
 }
 
 // return the cid given a jquery handle to an element
@@ -343,14 +368,14 @@ function initGlobals() {
 
 function enableInteractivity() {
 
-  $(".cardhandle").draggable({ grid: [5, 20],
+  $(".cardhandle_owned").draggable({ grid: [5, 20],
                             snap: ".zone",
                             snapMode: "inner",
                             snapTolerance: 10,
                             containment: "#battlefield_wrapper"});
 
   $("#battlefield_wrapper").droppable({
-    accept: ".cardhandle",
+    accept: ".cardhandle_owned",
     drop: function( event, ui ) {
       moveCardToZone(getCID(ui.draggable),
                      ZoneEnum.BATTLEFIELD,
@@ -359,7 +384,7 @@ function enableInteractivity() {
   });
 
   $("#hand").droppable({
-    accept: ".cardhandle",
+    accept: ".cardhandle_owned",
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
@@ -370,7 +395,7 @@ function enableInteractivity() {
   });
 
   $("#library").droppable({
-    accept: ".cardhandle",
+    accept: ".cardhandle_owned",
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
@@ -381,7 +406,7 @@ function enableInteractivity() {
   });
 
   $("#graveyard").droppable({
-    accept: ".cardhandle",
+    accept: ".cardhandle_owned",
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
@@ -392,7 +417,7 @@ function enableInteractivity() {
   });
 
   $("#exile").droppable({
-    accept: ".cardhandle",
+    accept: ".cardhandle_owned",
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
@@ -439,7 +464,7 @@ function enableInteractivity() {
   });
 
   // left mouse click to tap/untap a card
-  $(".cardhandle").click(function() {
+  $(".cardhandle_owned").click(function() {
     var cid = getCID($(this));
     var card = g_directory[cid];
     if (card.zone === ZoneEnum.BATTLEFIELD) {

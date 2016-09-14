@@ -75,13 +75,15 @@ TODO
      6. server: receive move event, propogate to all clients, transforming position based on perspective
  x add server-side data structures for representing/remembering cards and their order in each game zone
  x when a second instance of the same user connects to a game room, server-side force disconnect the old one
+ x make generateCard accept a boolean for if the card is controllable or nothing (client-side)
+ x make generateCard display cards upside-down if they are not our cards
+ x in the initialize_gamestate event client-side, iterate over all the cards and call generateCard on them as appropriate
 
 
-9/13/16: 
- - make generateCard accept a boolean for if the card is controllable or nothing (client-side)
- - make generateCard display cards upside-down if they are not our cards
- - in the initialize_gamestate event client-side, iterate over all the cards and call generateCard on them as appropriate
-
+9/14/16: 
+ - make the global zone arrays (g_library, etc) double-indexed [2] to represent both our and our opponent's zones
+ - modify moveCardToZone() to accept a boolean parameter representing a card's ownership
+ - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
 
 
 
@@ -92,7 +94,7 @@ TODO
    - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
    - http://stackoverflow.com/questions/13095418/how-to-use-passport-with-express-and-socket-io
  - make the 'game session' GUI on the client side pretty
-
+ - modify the game1v1 interface to accommodate the third party observer role (not player nor opponent)
 
 
  GAMEPLAY TODO
@@ -114,6 +116,7 @@ TODO
  - replace .attr() with .prop() throughout the code
  - upload the 'correct' version of back.jpg to cloud9
  - change the gameid to an unguessable string?
+ - prefix all function input parameters named p_, globals with g_
 
 
 

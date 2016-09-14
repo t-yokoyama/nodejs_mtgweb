@@ -21,12 +21,6 @@ html
 
         initGlobals();
         
-        // FIXME replace this with a loop that iterates over query results
-        generateCard("images/2090031.jpg");
-        generateCard("images/2090711.jpg");
-        generateCard("images/2090651.jpg");
-        enableInteractivity();
-
         var client_io = io('/game1v1');
         
         client_io.on('connect', function(data) {
@@ -57,8 +51,49 @@ html
 
         client_io.on('initialize_gamestate', function(data) {
         
-          // FIXME iterate over all the cards in the data.gamestate, assigning controllable or not depending on data.role
-          // alert(data.role);
+          // iterate over all the cards in the gamestate array, assigning card ownership based on data.role
+          var is_sender = (data.role == 0);
+          var is_recipient = (data.role == 1);
+
+          for (var i = 0; i < data.gamestate[0].cards.length; i++) {
+            var card = data.gamestate[0].cards[i];
+            generateCard(is_sender, card.imageurl, card.x, card.y, card.tapped, card.flipped, card.transformed, card.counters);
+          }
+
+          for (var i = 0; i < data.gamestate[1].cards.length; i++) {
+            var card = data.gamestate[1].cards[i];
+            generateCard(is_recipient, card.imageurl, card.x, card.y, card.tapped, card.flipped, card.transformed, card.counters);
+          }
+
+
+
+          // move cards to various zones depending on the zone array contents
+
+          // for (var i = 0; i < data.gamestate[0].hand.length; i++) {
+          //   var cid = data.gamestate[0].hand[i];
+          //   moveCardToZone(cid, ZoneEnum.HAND, false);
+          // }
+
+          // for (var i = 0; i < data.gamestate[0].library.length; i++) {
+          //   var cid = data.gamestate[0].library[i];
+          //   moveCardToZone(cid, ZoneEnum.LIBRARY, false);
+          // }
+
+          // for (var i = 0; i < data.gamestate[0].graveyard.length; i++) {
+          //   var cid = data.gamestate[0].graveyard[i];
+          //   moveCardToZone(cid, ZoneEnum.GRAVEYARD, false);
+          // }
+
+          // for (var i = 0; i < data.gamestate[0].exile.length; i++) {
+          //   var cid = data.gamestate[0].exile[i];
+          //   var faceDown = !g_directory[cid].faceUp;
+          //   moveCardToZone(cid, ZoneEnum.EXILE, faceDown);
+          // }
+
+
+
+          enableInteractivity();
+
         });
         
       });
@@ -68,11 +103,11 @@ html
 
     div(id="window")
       div(id="battlefield_wrapper")
-        div(class="battlefield", id="opp_battlefield") opp battlefield
+        div(class="battlefield", id="opp_battlefield") opp_battlefield
           div(class="opp_zone", id="opp_library") opp_library
           div(class="opp_zone", id="opp_graveyard") opp_graveyard
           div(class="opp_zone", id="opp_exile") opp_exile
-        div(class="battlefield", id="my_battlefield") my battlefield
+        div(class="battlefield", id="my_battlefield") my_battlefield
           div(class="zone", id="library") library
           div(class="zone", id="graveyard") graveyard
           div(class="zone", id="exile") exile

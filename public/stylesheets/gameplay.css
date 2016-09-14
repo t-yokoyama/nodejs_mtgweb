@@ -81,6 +81,14 @@ div.cardhandle {
   /* background-color: #666666; for debugging */
 }
 
+div.cardhandle_upsidedown {
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
 div.cardcanvas {
   position: absolute;
   height: 130px;
