@@ -1,5 +1,5 @@
 
-function generateCard(p_owned, p_image, p_x, p_y, p_tapped, p_flipped, p_transformed, p_counters) {
+function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flipped, p_transformed, p_counters) {
 
   // 'static' counter for incrementing card IDs
   if (typeof generateCard.numGenerated == 'undefined') {
@@ -34,10 +34,6 @@ function generateCard(p_owned, p_image, p_x, p_y, p_tapped, p_flipped, p_transfo
 
   var $cardCanvas = $("#" + cid);
   var $cardHandle = $("#h" + cid);
-  $cardCanvas.css("zIndex", 10); // FIXME
-  $cardCanvas.css("background-image", "url(" + p_image + ")");
-
-  // FIXME do we need a separate member variable for morphed cards? or does faceUp suffice?
 
   var cardEntry = {
     canvas : $cardCanvas,
@@ -45,7 +41,7 @@ function generateCard(p_owned, p_image, p_x, p_y, p_tapped, p_flipped, p_transfo
     imgSrc : "url(" + p_image + ")",
     owned: p_owned,
     zone : ZoneEnum.BATTLEFIELD,
-    faceUp : false,
+    faceDown : p_faceDown,
     tapped : p_tapped,
     flipped : p_flipped,
     transformed : p_transformed,
@@ -53,6 +49,14 @@ function generateCard(p_owned, p_image, p_x, p_y, p_tapped, p_flipped, p_transfo
   };
   
   g_directory.push(cardEntry);
+
+  $cardCanvas.css("zIndex", 10); // FIXME
+  if (p_faceDown) {
+    $cardCanvas.css("background-image", "url(images/back.jpg)");
+  }
+  else {
+    $cardCanvas.css("background-image", "url(" + p_image + ")");
+  }
 
   // FIXME apply visual effects of flipped/transformed/morphed etc here
 
@@ -86,6 +90,7 @@ function getCID($element) {
 function moveCardToZone(cid, toZone, shiftHeld) {
 
   var $cardCanvas = g_directory[cid].canvas;
+  var ownerIndex = (g_directory[cid].owned) ? 0 : 1;
 
   // update card position (regardless of zone change)
   updateCardPosition(cid, toZone);
@@ -94,10 +99,11 @@ function moveCardToZone(cid, toZone, shiftHeld) {
   var fromZone = g_directory[cid].zone;
   if (fromZone === toZone) {
 
-    // if we're about to abort, and there's a possibility that
-    // the user moved a 'hand' card around, refresh the hand 
+    // since we're about to abort, and there's a possibility that
+    // the user moved a 'hand' card around, refresh the hand
+    // FIXME what was i originally thinking? is this even necessary?
     if (toZone === ZoneEnum.HAND) {
-      refreshHand();
+      refreshHand(ownerIndex);
     }
 
     return;
@@ -117,26 +123,26 @@ function moveCardToZone(cid, toZone, shiftHeld) {
       break;
 
     case ZoneEnum.HAND:
-      pos = g_hand.indexOf(cid);
-      g_hand.splice(pos, 1);
+      pos = g_hand[ownerIndex].indexOf(cid);
+      g_hand[ownerIndex].splice(pos, 1);
       refHand = true;
       break;
 
     case ZoneEnum.LIBRARY:
-      pos = g_library.indexOf(cid);
-      g_library.splice(pos, 1);
+      pos = g_library[ownerIndex].indexOf(cid);
+      g_library[ownerIndex].splice(pos, 1);
       refLibrary = true;
       break;
 
     case ZoneEnum.GRAVEYARD:
-      pos = g_graveyard.indexOf(cid);
-      g_graveyard.splice(pos, 1);
+      pos = g_graveyard[ownerIndex].indexOf(cid);
+      g_graveyard[ownerIndex].splice(pos, 1);
       refGraveyard = true;
       break;
 
     case ZoneEnum.EXILE:
-      pos = g_exile.indexOf(cid);
-      g_exile.splice(pos, 1);
+      pos = g_exile[ownerIndex].indexOf(cid);
+      g_exile[ownerIndex].splice(pos, 1);
       $cardCanvas.removeClass("cardcanvas_exiled");
       refExile = true;
       break;
@@ -151,25 +157,25 @@ function moveCardToZone(cid, toZone, shiftHeld) {
       break;
 
     case ZoneEnum.HAND:
-      g_hand.push(cid);
+      g_hand[ownerIndex].push(cid);
       turnFaceUp = true;
       refHand = true;
       break;
 
     case ZoneEnum.LIBRARY:
-      g_library.push(cid);
+      g_library[ownerIndex].push(cid);
       turnFaceUp = false;
       refLibrary = true;
       break;
 
     case ZoneEnum.GRAVEYARD:
-      g_graveyard.push(cid);
+      g_graveyard[ownerIndex].push(cid);
       turnFaceUp = true;
       refGraveyard = true;
       break;
 
     case ZoneEnum.EXILE:
-      g_exile.push(cid);
+      g_exile[ownerIndex].push(cid);
       turnFaceUp = !shiftHeld;
       $cardCanvas.addClass("cardcanvas_exiled");
       refExile = true;
@@ -186,27 +192,27 @@ function moveCardToZone(cid, toZone, shiftHeld) {
   g_directory[cid].numCounters = 0;
 
   // toggle face up/down as appropriate
-  if (g_directory[cid].faceUp && !turnFaceUp) {
+  if (!g_directory[cid].faceDown && !turnFaceUp) {
     $cardCanvas.css("background-image", "url(images/back.jpg)");
-    g_directory[cid].faceUp = false;
+    g_directory[cid].faceDown = true;
   }
-  else if (!g_directory[cid].faceUp && turnFaceUp) {
+  else if (g_directory[cid].faceDown && turnFaceUp) {
     $cardCanvas.css("background-image", g_directory[cid].imgSrc);
-    g_directory[cid].faceUp = true;
+    g_directory[cid].faceDown = false;
   }
 
   // refresh display on both to/from zones
   if (refHand) {
-    refreshHand();
+    refreshHand(ownerIndex);
   }
   if (refLibrary) {
-    refreshLibrary();
+    refreshLibrary(ownerIndex);
   }
   if (refGraveyard) {
-    refreshGraveyard();
+    refreshGraveyard(ownerIndex);
   }
   if (refExile) {
-    refreshExile();
+    refreshExile(ownerIndex);
   }
 
   // FIXME notify other client of state change
@@ -215,45 +221,81 @@ function moveCardToZone(cid, toZone, shiftHeld) {
 function updateCardPosition(cid, toZone) {
 
   var $cardHandle = g_directory[cid].handle;
+  if (g_directory[cid].owned) {
 
-  switch(toZone) {
-
-    case ZoneEnum.HAND:
-      $cardHandle.css("top", "auto");
-      $cardHandle.css("bottom", $("#hand").css("bottom"));
-      $cardHandle.css("left", "0px");
-      $cardHandle.css("right", "auto");
-      break;
-
-    case ZoneEnum.LIBRARY:
-      $cardHandle.css("top", $("#library").css("top"));
-      $cardHandle.css("bottom", "auto");
-      $cardHandle.css("left", $("#library").css("left"));
-      $cardHandle.css("right", "auto");
-      break;
-
-    case ZoneEnum.GRAVEYARD:
-      $cardHandle.css("top", $("#graveyard").css("top"));
-      $cardHandle.css("bottom", "auto");
-      $cardHandle.css("left", $("#graveyard").css("left"));
-      $cardHandle.css("right", "auto");
-      break;
-
-    case ZoneEnum.EXILE:
-      $cardHandle.css("top", $("#exile").css("top"));
-      $cardHandle.css("bottom", "auto");
-      $cardHandle.css("left", "auto");
-      $cardHandle.css("right", $("#exile").css("right"));
-      break;
+    switch(toZone) {
+  
+      case ZoneEnum.HAND:
+        $cardHandle.css("top", "auto");
+        $cardHandle.css("bottom", $("#hand").css("bottom"));
+        $cardHandle.css("left", "0px");
+        $cardHandle.css("right", "auto");
+        break;
+  
+      case ZoneEnum.LIBRARY:
+        $cardHandle.css("top", $("#library").css("top"));
+        $cardHandle.css("bottom", "auto");
+        $cardHandle.css("left", $("#library").css("left"));
+        $cardHandle.css("right", "auto");
+        break;
+  
+      case ZoneEnum.GRAVEYARD:
+        $cardHandle.css("top", $("#graveyard").css("top"));
+        $cardHandle.css("bottom", "auto");
+        $cardHandle.css("left", $("#graveyard").css("left"));
+        $cardHandle.css("right", "auto");
+        break;
+  
+      case ZoneEnum.EXILE:
+        $cardHandle.css("top", $("#exile").css("top"));
+        $cardHandle.css("bottom", "auto");
+        $cardHandle.css("left", "auto");
+        $cardHandle.css("right", $("#exile").css("right"));
+        break;
+    }
+  }
+  else {
+  
+    switch(toZone) {
+  
+      //case ZoneEnum.HAND:
+      //  $cardHandle.css("top", $("#opp_hand").css("top"));
+      //  $cardHandle.css("bottom", "auto");
+      //  $cardHandle.css("left", "0px");
+      //  $cardHandle.css("right", "auto");
+      //  break;
+  
+      case ZoneEnum.LIBRARY:
+        $cardHandle.css("top", "auto");
+        $cardHandle.css("bottom", $("#opp_library").css("bottom"));
+        $cardHandle.css("left", $("#opp_library").css("left"));
+        $cardHandle.css("right", "auto");
+        break;
+  
+      case ZoneEnum.GRAVEYARD:
+        $cardHandle.css("top", "auto");
+        $cardHandle.css("bottom", $("#opp_graveyard").css("bottom"));
+        $cardHandle.css("left", $("#opp_graveyard").css("left"));
+        $cardHandle.css("right", "auto");
+        break;
+  
+      case ZoneEnum.EXILE:
+        $cardHandle.css("top", "auto");
+        $cardHandle.css("bottom", $("#opp_exile").css("bottom"));
+        $cardHandle.css("left", "auto");
+        $cardHandle.css("right", $("#opp_exile").css("right"));
+        break;
+    }
+    
   }
 }
 
-function refreshLibrary() {
+function refreshLibrary(p_ownerIndex) {
   var offset = $("#library").offset();
   var z = offset.top * ZWIDTH + offset.left;
-  var numCards = g_library.length;
+  var numCards = g_library[p_ownerIndex].length;
   for (var i = 0; i < numCards; i++) {
-    var cid = g_library[i];
+    var cid = g_library[p_ownerIndex][i];
     var $cardHandle = g_directory[cid].handle;
     if (i === numCards - 1) {
       $cardHandle.show()
@@ -269,12 +311,12 @@ function refreshLibrary() {
   }
 }
 
-function refreshGraveyard() {
+function refreshGraveyard(p_ownerIndex) {
   var offset = $("#graveyard").offset();
   var z = offset.top * ZWIDTH + offset.left;
-  var numCards = g_graveyard.length;
+  var numCards = g_graveyard[p_ownerIndex].length;
   for (var i = 0; i < numCards; i++) {
-    var cid = g_graveyard[i];
+    var cid = g_graveyard[p_ownerIndex][i];
     var $cardHandle = g_directory[cid].handle;
     if (i === numCards - 1) {
       $cardHandle.show()
@@ -290,12 +332,12 @@ function refreshGraveyard() {
   }
 }
 
-function refreshExile() {
+function refreshExile(p_ownerIndex) {
   var offset = $("#exile").offset();
   var z = offset.top * ZWIDTH + offset.left;
-  var numCards = g_exile.length;
+  var numCards = g_exile[p_ownerIndex].length;
   for (var i = 0; i < numCards; i++) {
-    var cid = g_exile[i];
+    var cid = g_exile[p_ownerIndex][i];
     var $cardHandle = g_directory[cid].handle;
     if (i === numCards - 1) {
       $cardHandle.show()
@@ -311,13 +353,13 @@ function refreshExile() {
   }
 }
 
-function refreshHand() {
+function refreshHand(p_ownerIndex) {
   var offset = $("#hand").offset();
   var zbase = offset.top * ZWIDTH;
-  var numCards = g_hand.length;
+  var numCards = g_hand[p_ownerIndex].length;
   var totalWidth = $("#hand").width() - 100;
   for (var i = 0; i < numCards; i++) {
-    var cid = g_hand[i];
+    var cid = g_hand[p_ownerIndex][i];
     var $cardHandle = g_directory[cid].handle;
     var left = Math.floor(i * Math.min(totalWidth / (numCards - 1), 100));
     $cardHandle.css("left", left);
@@ -349,15 +391,15 @@ function initGlobals() {
     GRAVEYARD : 4,
     EXILE : 5
   };
-
+  
   window.ZTOP = 100000000;
   window.ZWIDTH = 10000;
 
   window.g_directory = [];
-  window.g_library = [];
-  window.g_graveyard = [];
-  window.g_exile = [];
-  window.g_hand = [];
+  window.g_library = [ [], [] ];
+  window.g_graveyard = [ [], [] ];
+  window.g_exile = [ [], [] ];
+  window.g_hand = [ [], [] ];
 
   window.g_shiftHeld = false;
   window.g_rcmenuActive = false;
@@ -441,6 +483,7 @@ function enableInteractivity() {
         var cid = getCID($(this));
         unhighlightCard(cid);
       }
+      // FIXME be sure to call unhighlightCard on an opponent's card that just got moved
   });
 
   // uses the bootstrap-contextmenu library to implement a right-click menu

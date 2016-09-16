@@ -78,11 +78,15 @@ TODO
  x make generateCard accept a boolean for if the card is controllable or nothing (client-side)
  x make generateCard display cards upside-down if they are not our cards
  x in the initialize_gamestate event client-side, iterate over all the cards and call generateCard on them as appropriate
+ x make the global zone arrays (g_library, etc) double-indexed [2] to represent both our and our opponent's zones
+ x modify moveCardToZone() to accept a boolean parameter representing a card's ownership
 
 
-9/14/16: 
- - make the global zone arrays (g_library, etc) double-indexed [2] to represent both our and our opponent's zones
- - modify moveCardToZone() to accept a boolean parameter representing a card's ownership
+9/15/16: 
+ - FIXME why does closing the room and reopening cause a seg fault?
+ - add an opponent's hand
+   - uncomment hand section of updateCardPosition()
+ - confirm updateCardPosition() works on opponent's cards in opponent's zones
  - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
 
 
@@ -107,6 +111,7 @@ TODO
  - keyboard shortcuts for moveToXZone?
  - implement token generation
  - prevent card borders from getting grayscaled by filters
+
 
  MISC TODO
  - implement wallpapers (how do we elegantly flip a background?)

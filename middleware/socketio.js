@@ -304,6 +304,7 @@ module.exports = function(app, server) {
                   games[data.gameid].gamestate[0].cards[cid1] = { imageurl: result1.rows[i].imageurl, 
                                                                   x: 0,
                                                                   y: 0,
+                                                                  faceDown: true,
                                                                   tapped: false,
                                                                   flipped: false,
                                                                   transformed: false,
@@ -327,12 +328,14 @@ module.exports = function(app, server) {
                       games[data.gameid].gamestate[1].cards[cid2] = { imageurl: result2.rows[i].imageurl, 
                                                                       x: 0,
                                                                       y: 0,
+                                                                      faceDown: true,
                                                                       tapped: false,
                                                                       flipped: false,
                                                                       transformed: false,
                                                                       counters: 0
                                                                     };
-                      games[data.gameid].gamestate[1].library.push(cid2);
+                      // on the client-side, this recipient's cards will be globally indexed after the sender's cards so add cid1
+                      games[data.gameid].gamestate[1].library.push(cid1 + cid2);
                       cid2++;
                     }
                   }
