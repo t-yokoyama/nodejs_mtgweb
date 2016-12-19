@@ -83,7 +83,6 @@ TODO
 
 
 9/15/16: 
- - FIXME why does closing the room and reopening cause a seg fault?
  - add an opponent's hand
    - uncomment hand section of updateCardPosition()
  - confirm updateCardPosition() works on opponent's cards in opponent's zones
