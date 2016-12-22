@@ -1,4 +1,29 @@
 
+function initGlobals() {
+
+  // global variables
+  window.ZoneEnum = {
+    BATTLEFIELD : 1,
+    HAND : 2,
+    LIBRARY : 3,
+    GRAVEYARD : 4,
+    EXILE : 5
+  };
+  
+  window.ZTOP = 100000000;
+  window.ZWIDTH = 10000;
+
+  window.g_directory = [];
+  window.g_library = [ [], [] ];
+  window.g_graveyard = [ [], [] ];
+  window.g_exile = [ [], [] ];
+  window.g_hand = [ [], [] ];
+
+  window.g_shiftHeld = false;
+  window.g_rcmenuActive = false;
+  window.g_rcCardId = -1;
+}
+
 function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flipped, p_transformed, p_counters) {
 
   // 'static' counter for incrementing card IDs
@@ -87,25 +112,50 @@ function getCID($element) {
   return cid;
 }
 
-function moveCardToZone(cid, toZone, shiftHeld) {
 
-  var $cardCanvas = g_directory[cid].canvas;
-  var ownerIndex = (g_directory[cid].owned) ? 0 : 1;
+function moveCardToZone(p_cid, p_toZone, p_shiftHeld, p_notifyServer) {
+
+  var $cardCanvas = g_directory[p_cid].canvas;
+  var ownerIndex = (g_directory[p_cid].owned) ? 0 : 1;
 
   // update card position (regardless of zone change)
-  updateCardPosition(cid, toZone);
+  updateCardPosition(p_cid, p_toZone);
 
-  // check if we need to actually do anything else
-  var fromZone = g_directory[cid].zone;
-  if (fromZone === toZone) {
+  var fromZone = g_directory[p_cid].zone;
 
-    // since we're about to abort, and there's a possibility that
-    // the user moved a 'hand' card around, refresh the hand
-    // FIXME what was i originally thinking? is this even necessary?
-    if (toZone === ZoneEnum.HAND) {
+  // notify server/opponent of state change
+  if (p_notifyServer) {
+    
+    if (p_toZone === ZoneEnum.BATTLEFIELD) {
+
+      var $cardElement = $("#h" + p_cid);
+      g_client_io.emit('card_moved', { cid: p_cid,
+                                       fromZone: fromZone,
+                                       toZone: ZoneEnum.BATTLEFIELD,
+                                       x: $cardElement.position().left,
+                                       y: $cardElement.position().top,
+                                       faceDown: p_shiftHeld
+                                     });
+    }
+    else if (fromZone != p_toZone) {
+
+      g_client_io.emit('card_moved', { cid: p_cid,
+                                       fromZone: fromZone,
+                                       toZone: p_toZone,
+                                       faceDown: p_shiftHeld
+                                     });
+    }
+  }
+
+  if (fromZone === p_toZone) {
+
+    // the only time we'd need to re-draw anything when a card doesn't
+    // change zones is moving a 'hand' card around; refresh the hand
+    if (p_toZone === ZoneEnum.HAND) {
       refreshHand(ownerIndex);
     }
 
+    // if a card didn't change zones, there is no work to be done now
     return;
   }
 
@@ -123,25 +173,25 @@ function moveCardToZone(cid, toZone, shiftHeld) {
       break;
 
     case ZoneEnum.HAND:
-      pos = g_hand[ownerIndex].indexOf(cid);
+      pos = g_hand[ownerIndex].indexOf(p_cid);
       g_hand[ownerIndex].splice(pos, 1);
       refHand = true;
       break;
 
     case ZoneEnum.LIBRARY:
-      pos = g_library[ownerIndex].indexOf(cid);
+      pos = g_library[ownerIndex].indexOf(p_cid);
       g_library[ownerIndex].splice(pos, 1);
       refLibrary = true;
       break;
 
     case ZoneEnum.GRAVEYARD:
-      pos = g_graveyard[ownerIndex].indexOf(cid);
+      pos = g_graveyard[ownerIndex].indexOf(p_cid);
       g_graveyard[ownerIndex].splice(pos, 1);
       refGraveyard = true;
       break;
 
     case ZoneEnum.EXILE:
-      pos = g_exile[ownerIndex].indexOf(cid);
+      pos = g_exile[ownerIndex].indexOf(p_cid);
       g_exile[ownerIndex].splice(pos, 1);
       $cardCanvas.removeClass("cardcanvas_exiled");
       refExile = true;
@@ -150,33 +200,33 @@ function moveCardToZone(cid, toZone, shiftHeld) {
 
   // switch on dest zone, then add to new array
   var turnFaceUp;
-  switch(toZone) {
+  switch(p_toZone) {
 
     case ZoneEnum.BATTLEFIELD:
-      turnFaceUp = !shiftHeld;
+      turnFaceUp = !p_shiftHeld;
       break;
 
     case ZoneEnum.HAND:
-      g_hand[ownerIndex].push(cid);
-      turnFaceUp = true;
+      g_hand[ownerIndex].push(p_cid);
+      turnFaceUp = (g_directory[p_cid].owned);
       refHand = true;
       break;
 
     case ZoneEnum.LIBRARY:
-      g_library[ownerIndex].push(cid);
+      g_library[ownerIndex].push(p_cid);
       turnFaceUp = false;
       refLibrary = true;
       break;
 
     case ZoneEnum.GRAVEYARD:
-      g_graveyard[ownerIndex].push(cid);
+      g_graveyard[ownerIndex].push(p_cid);
       turnFaceUp = true;
       refGraveyard = true;
       break;
 
     case ZoneEnum.EXILE:
-      g_exile[ownerIndex].push(cid);
-      turnFaceUp = !shiftHeld;
+      g_exile[ownerIndex].push(p_cid);
+      turnFaceUp = !p_shiftHeld;
       $cardCanvas.addClass("cardcanvas_exiled");
       refExile = true;
       break;
@@ -185,20 +235,20 @@ function moveCardToZone(cid, toZone, shiftHeld) {
   $cardCanvas.removeClass("cardcanvas_tapped");
 
   // update directory
-  g_directory[cid].zone = toZone;
-  g_directory[cid].tapped = false;
-  g_directory[cid].flipped = false;
-  g_directory[cid].transformed = false;
-  g_directory[cid].numCounters = 0;
+  g_directory[p_cid].zone = p_toZone;
+  g_directory[p_cid].tapped = false;
+  g_directory[p_cid].flipped = false;
+  g_directory[p_cid].transformed = false;
+  g_directory[p_cid].numCounters = 0;
 
   // toggle face up/down as appropriate
-  if (!g_directory[cid].faceDown && !turnFaceUp) {
+  if (!g_directory[p_cid].faceDown && !turnFaceUp) {
     $cardCanvas.css("background-image", "url(images/back.jpg)");
-    g_directory[cid].faceDown = true;
+    g_directory[p_cid].faceDown = true;
   }
-  else if (g_directory[cid].faceDown && turnFaceUp) {
-    $cardCanvas.css("background-image", g_directory[cid].imgSrc);
-    g_directory[cid].faceDown = false;
+  else if (g_directory[p_cid].faceDown && turnFaceUp) {
+    $cardCanvas.css("background-image", g_directory[p_cid].imgSrc);
+    g_directory[p_cid].faceDown = false;
   }
 
   // refresh display on both to/from zones
@@ -214,16 +264,14 @@ function moveCardToZone(cid, toZone, shiftHeld) {
   if (refExile) {
     refreshExile(ownerIndex);
   }
-
-  // FIXME notify other client of state change
 }
 
-function updateCardPosition(cid, toZone) {
+function updateCardPosition(p_cid, p_toZone) {
 
-  var $cardHandle = g_directory[cid].handle;
-  if (g_directory[cid].owned) {
+  var $cardHandle = g_directory[p_cid].handle;
+  if (g_directory[p_cid].owned) {
 
-    switch(toZone) {
+    switch(p_toZone) {
   
       case ZoneEnum.HAND:
         $cardHandle.css("top", "auto");
@@ -256,14 +304,14 @@ function updateCardPosition(cid, toZone) {
   }
   else {
   
-    switch(toZone) {
+    switch(p_toZone) {
   
-      //case ZoneEnum.HAND:
-      //  $cardHandle.css("top", $("#opp_hand").css("top"));
-      //  $cardHandle.css("bottom", "auto");
-      //  $cardHandle.css("left", "0px");
-      //  $cardHandle.css("right", "auto");
-      //  break;
+      case ZoneEnum.HAND:
+        $cardHandle.css("top", $("#opp_hand").css("top"));
+        $cardHandle.css("bottom", "auto");
+        $cardHandle.css("left", "0px");
+        $cardHandle.css("right", "auto");
+        break;
   
       case ZoneEnum.LIBRARY:
         $cardHandle.css("top", "auto");
@@ -292,6 +340,9 @@ function updateCardPosition(cid, toZone) {
 
 function refreshLibrary(p_ownerIndex) {
   var offset = $("#library").offset();
+  if (p_ownerIndex == 1) {
+    offset = $("#opp_library").offset();
+  }
   var z = offset.top * ZWIDTH + offset.left;
   var numCards = g_library[p_ownerIndex].length;
   for (var i = 0; i < numCards; i++) {
@@ -313,6 +364,9 @@ function refreshLibrary(p_ownerIndex) {
 
 function refreshGraveyard(p_ownerIndex) {
   var offset = $("#graveyard").offset();
+  if (p_ownerIndex == 1) {
+    offset = $("#opp_graveyard").offset();
+  }
   var z = offset.top * ZWIDTH + offset.left;
   var numCards = g_graveyard[p_ownerIndex].length;
   for (var i = 0; i < numCards; i++) {
@@ -334,6 +388,9 @@ function refreshGraveyard(p_ownerIndex) {
 
 function refreshExile(p_ownerIndex) {
   var offset = $("#exile").offset();
+  if (p_ownerIndex == 1) {
+    offset = $("#opp_exile").offset();
+  }
   var z = offset.top * ZWIDTH + offset.left;
   var numCards = g_exile[p_ownerIndex].length;
   for (var i = 0; i < numCards; i++) {
@@ -355,9 +412,13 @@ function refreshExile(p_ownerIndex) {
 
 function refreshHand(p_ownerIndex) {
   var offset = $("#hand").offset();
+  var totalWidth = $("#hand").width() - 100;
+  if (p_ownerIndex == 1) {
+    offset = $("#opp_hand").offset();
+    totalWidth = $("#opp_hand").width() - 100;
+  }
   var zbase = offset.top * ZWIDTH;
   var numCards = g_hand[p_ownerIndex].length;
-  var totalWidth = $("#hand").width() - 100;
   for (var i = 0; i < numCards; i++) {
     var cid = g_hand[p_ownerIndex][i];
     var $cardHandle = g_directory[cid].handle;
@@ -367,61 +428,34 @@ function refreshHand(p_ownerIndex) {
   }
 }
 
-function highlightCard(cid) {
-  g_directory[cid].canvas.addClass("cardcanvas_hover");
-  g_directory[cid].handle.css("zIndex", ZTOP);
+function highlightCard(p_cid) {
+  g_directory[p_cid].canvas.addClass("cardcanvas_hover");
+  g_directory[p_cid].handle.css("zIndex", ZTOP);
 }
 
-function unhighlightCard(cid) {
-  g_directory[cid].canvas.removeClass("cardcanvas_hover");
-  var offset = g_directory[cid].handle.offset();
-  g_directory[cid].handle.css("zIndex", offset.top * ZWIDTH + offset.left);
+function unhighlightCard(p_cid) {
+  g_directory[p_cid].canvas.removeClass("cardcanvas_hover");
+  var offset = g_directory[p_cid].handle.offset();
+  g_directory[p_cid].handle.css("zIndex", offset.top * ZWIDTH + offset.left);
 }
-
-
-
-
-function initGlobals() {
-
-  // global variables
-  window.ZoneEnum = {
-    BATTLEFIELD : 1,
-    HAND : 2,
-    LIBRARY : 3,
-    GRAVEYARD : 4,
-    EXILE : 5
-  };
-  
-  window.ZTOP = 100000000;
-  window.ZWIDTH = 10000;
-
-  window.g_directory = [];
-  window.g_library = [ [], [] ];
-  window.g_graveyard = [ [], [] ];
-  window.g_exile = [ [], [] ];
-  window.g_hand = [ [], [] ];
-
-  window.g_shiftHeld = false;
-  window.g_rcmenuActive = false;
-  window.g_rcCardId = -1;
-}
-
 
 
 function enableInteractivity() {
 
   $(".cardhandle_owned").draggable({ grid: [5, 20],
-                            snap: ".zone",
-                            snapMode: "inner",
-                            snapTolerance: 10,
-                            containment: "#battlefield_wrapper"});
+                                     snap: ".zone",
+                                     snapMode: "inner",
+                                     snapTolerance: 10,
+                                     containment: "#battlefield_wrapper"
+  });
 
   $("#battlefield_wrapper").droppable({
     accept: ".cardhandle_owned",
     drop: function( event, ui ) {
       moveCardToZone(getCID(ui.draggable),
                      ZoneEnum.BATTLEFIELD,
-                     g_shiftHeld);
+                     g_shiftHeld,
+                     true);
     }
   });
 
@@ -432,7 +466,8 @@ function enableInteractivity() {
     drop: function( event, ui ) {
       moveCardToZone(getCID(ui.draggable),
                      ZoneEnum.HAND,
-                     g_shiftHeld);
+                     g_shiftHeld,
+                     true);
     }
   });
 
@@ -443,7 +478,8 @@ function enableInteractivity() {
     drop: function( event, ui ) {
       moveCardToZone(getCID(ui.draggable),
                      ZoneEnum.LIBRARY,
-                     g_shiftHeld);
+                     g_shiftHeld,
+                     true);
     }
   });
 
@@ -454,7 +490,8 @@ function enableInteractivity() {
     drop: function( event, ui ) {
       moveCardToZone(getCID(ui.draggable),
                      ZoneEnum.GRAVEYARD,
-                     g_shiftHeld);
+                     g_shiftHeld,
+                     true);
     }
   });
 
@@ -465,7 +502,8 @@ function enableInteractivity() {
     drop: function( event, ui ) {
       moveCardToZone(getCID(ui.draggable),
                      ZoneEnum.EXILE,
-                     g_shiftHeld);
+                     g_shiftHeld,
+                     true);
     }
   });
 

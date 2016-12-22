@@ -63,15 +63,21 @@ div#library { top: 20px; left: 140px; }
 div#graveyard { top: 20px; left: 20px; }
 div#exile { top: 20px; right: 20px; }
 
+div#opp_library { bottom: 20px; left: 140px; }
+div#opp_graveyard { bottom: 20px; left: 20px; }
+div#opp_exile { bottom: 20px; right: 20px; }
+
 div#hand {
   position: absolute;
   width: 100%;
   bottom: 0px;
 }
 
-div#opp_library { bottom: 20px; left: 140px; }
-div#opp_graveyard { bottom: 20px; left: 20px; }
-div#opp_exile { bottom: 20px; right: 20px; }
+div#opp_hand {
+  position: absolute;
+  width: 100%;
+  top: 0px;
+}
 
 div.cardhandle {
   position: absolute;

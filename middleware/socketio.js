@@ -4,6 +4,15 @@ module.exports = function(app, server) {
 
   var io = require('socket.io')(server);
 
+  // this must be kept in sync with the client-side definition
+  var ZoneEnum = {
+    BATTLEFIELD : 1,
+    HAND : 2,
+    LIBRARY : 3,
+    GRAVEYARD : 4,
+    EXILE : 5
+  };
+  
   // FIXME prefix these with g_
   var gameid_counter = 1000;
   var users_by_sid = {};        // elements: { userid, username, color }
@@ -140,8 +149,10 @@ module.exports = function(app, server) {
                      recipient_did: -1,
                      recipient_state: 'CHALLENGE_RECEIVED',
                      recipient_game_sid: -1,
-                     gamestate: [ { cards: [], hand: [], library: [], graveyard: [], exile: [] } , 
-                                  { cards: [], hand: [], library: [], graveyard: [], exile: [] } ] };
+                     gamestate: { cards: [],
+                                  zones: [ { hand: [], library: [], graveyard: [], exile: [] } ,
+                                           { hand: [], library: [], graveyard: [], exile: [] } ] } };
+
 
       // FIXME check for existing games between the two users and disallow multiple?
       // FIXME add sideboard-pregame option checkbox
@@ -298,20 +309,21 @@ module.exports = function(app, server) {
               if (err) {
                 return console.error('error running query', err);
               }
-              var cid1 = 0;
+              var cid = 0;
               for(var i = 0; i < result1.rows.length; i++) {
                 for(var j = 0; j < result1.rows[i].qty; j++) {
-                  games[data.gameid].gamestate[0].cards[cid1] = { imageurl: result1.rows[i].imageurl, 
-                                                                  x: 0,
-                                                                  y: 0,
-                                                                  faceDown: true,
-                                                                  tapped: false,
-                                                                  flipped: false,
-                                                                  transformed: false,
-                                                                  counters: 0
-                                                                };
-                  games[data.gameid].gamestate[0].library.push(cid1);
-                  cid1++;
+                  games[data.gameid].gamestate.cards[cid] = { imageurl: result1.rows[i].imageurl,
+                                                              x: 0,
+                                                              y: 0,
+                                                              faceDown: true,
+                                                              tapped: false,
+                                                              flipped: false,
+                                                              transformed: false,
+                                                              counters: 0,
+                                                              owner: 0
+                                                            };
+                  games[data.gameid].gamestate.zones[0].library.push(cid);
+                  cid++;
                 }
               }
 
@@ -322,21 +334,20 @@ module.exports = function(app, server) {
                   if (err) {
                     return console.error('error running query', err);
                   }
-                  var cid2 = 0;
                   for(var i = 0; i < result2.rows.length; i++) {
                     for(var j = 0; j < result2.rows[i].qty; j++) {
-                      games[data.gameid].gamestate[1].cards[cid2] = { imageurl: result2.rows[i].imageurl, 
-                                                                      x: 0,
-                                                                      y: 0,
-                                                                      faceDown: true,
-                                                                      tapped: false,
-                                                                      flipped: false,
-                                                                      transformed: false,
-                                                                      counters: 0
-                                                                    };
-                      // on the client-side, this recipient's cards will be globally indexed after the sender's cards so add cid1
-                      games[data.gameid].gamestate[1].library.push(cid1 + cid2);
-                      cid2++;
+                      games[data.gameid].gamestate.cards[cid] = { imageurl: result2.rows[i].imageurl, 
+                                                                  x: 0,
+                                                                  y: 0,
+                                                                  faceDown: true,
+                                                                  tapped: false,
+                                                                  flipped: false,
+                                                                  transformed: false,
+                                                                  counters: 0,
+                                                                  owner: 1
+                                                                };
+                      games[data.gameid].gamestate.zones[1].library.push(cid);
+                      cid++;
                     }
                   }
 
@@ -377,21 +388,24 @@ module.exports = function(app, server) {
       socket.join(data.roomid);
 
       var role_index = -1;
-      if (data.userid == games[data.roomid].sender_uid) {
+      if (data.userid === games[data.roomid].sender_uid) {
         if (games[data.roomid].sender_game_sid != -1 & socket.id != games[data.roomid].sender_game_sid) {
           console.log('transferring game control to a new client and disconnecting the old one.');
-          var old_session = game1v1_io.connected[games[data.roomid].sender_game_sid]
-          if (old_session != undefined) {
+          var old_session = game1v1_io.connected[games[data.roomid].sender_game_sid];
+          if (old_session !== undefined) {
             old_session.emit('duplicate_user_connect');
           }
         }
         games[data.roomid].sender_game_sid = socket.id;
         role_index = 0;
       }
-      else if (data.userid == games[data.roomid].recipient_uid) {
+      else if (data.userid === games[data.roomid].recipient_uid) {
         if (games[data.roomid].recipient_game_sid != -1 & socket.id != games[data.roomid].recipient_game_sid) {
           console.log('transferring game control to a new client and disconnecting the old one.');
-          game1v1_io.connected[games[data.roomid].recipient_game_sid].emit('duplicate_user_connect');
+          var old_session = game1v1_io.connected[games[data.roomid].recipient_game_sid];
+          if (old_session !== undefined) {
+            old_session.emit('duplicate_user_connect');
+          }
         }
         games[data.roomid].recipient_game_sid = socket.id;
         role_index = 1;
@@ -403,6 +417,98 @@ module.exports = function(app, server) {
                                             role: role_index });
     });
 
+
+    socket.on('card_moved', function(data) {
+
+      if (socket.room === undefined) {
+        console.log('card_moved event received on a socket with undefined roomid.');
+        return;
+      }
+
+      var role_index = -1;
+      if (socket.id === games[socket.room].sender_game_sid) {
+        role_index = 0;
+      }
+      else if (socket.id === games[socket.room].recipient_game_sid) {
+        role_index = 1;
+      }
+      if (role_index === -1) {
+        console.log('card_moved event received on a socket with invalid userid.');
+        return;
+      }
+
+      // switch on from/to zones and remove/add cids
+      
+      // this behaves like a pointer, modifying zone_array modify the original array object
+      var zone_array = undefined;
+      switch(data.fromZone) {
+
+        case ZoneEnum.HAND:
+          zone_array = games[socket.room].gamestate.zones[role_index].hand;
+          break;
+
+        case ZoneEnum.LIBRARY:
+          zone_array = games[socket.room].gamestate.zones[role_index].library;
+          break;
+
+        case ZoneEnum.GRAVEYARD:
+          zone_array = games[socket.room].gamestate.zones[role_index].graveyard;
+          break;
+
+        case ZoneEnum.EXILE:
+          zone_array = games[socket.room].gamestate.zones[role_index].exile;
+          break;
+      }
+      
+      if (zone_array != undefined ) {
+
+        var index = zone_array.indexOf(data.cid);
+        if (index === -1) {
+          console.log('received an invalid card_moved event.');
+          return;
+        }
+        else
+        {
+          // remove the element from the array
+          zone_array.splice(index, 1);
+        }
+      }
+
+      switch(data.toZone) {
+
+        case ZoneEnum.HAND:
+          games[socket.room].gamestate.zones[role_index].hand.push(data.cid);
+          break;
+
+        case ZoneEnum.LIBRARY:
+          games[socket.room].gamestate.zones[role_index].library.push(data.cid);
+          break;
+
+        case ZoneEnum.GRAVEYARD:
+          games[socket.room].gamestate.zones[role_index].graveyard.push(data.cid);
+          break;
+
+        case ZoneEnum.EXILE:
+          games[socket.room].gamestate.zones[role_index].exile.push(data.cid);
+          break;
+      }
+
+      var card = games[socket.room].gamestate.cards[data.cid];
+      if (data.toZone == ZoneEnum.BATTLEFIELD) {
+        card.x = data.x;
+        card.y = data.y;
+      }
+      if (data.toZone == ZoneEnum.BATTLEFIELD || data.toZone == ZoneEnum.EXILE) {
+        card.faceDown = data.faceDown;
+      }
+
+      // FIXME if after testing it turns out this function never fails, move this emit call to the top of the function to reduce latency
+      // pass along the message to the other client(s)
+      socket.broadcast.emit('card_moved', data);
+
+      console.log('a card was moved: (' + data.fromZone + ' to ' + data.toZone + ').');
+
+    });
 
 
     socket.on('disconnect', function(){
