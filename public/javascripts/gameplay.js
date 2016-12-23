@@ -24,6 +24,67 @@ function initGlobals() {
   window.g_rcCardId = -1;
 }
 
+function setClientIOCallbacks() {
+
+  g_client_io.on('duplicate_user_connect', function() {
+    alert('You have entered the room in a separate window, disconnecting this instance.');
+    
+    // FIXME test to make sure this actually severs the socket connection
+    g_client_io.disconnect();
+  });
+
+  g_client_io.on('initialize_gamestate', function(data) {
+  
+    // iterate over all the cards in the gamestate array, assigning card ownership based on data.role
+    for (var i = 0; i < data.gamestate.cards.length; i++) {
+      var card = data.gamestate.cards[i];
+      var is_owner = (data.role === card.owner);
+      generateCard(is_owner, card.imageurl, card.x, card.y, card.faceDown, card.tapped, card.flipped, card.transformed, card.counters);
+    }
+
+    // move each player's cards to various zones depending on the zone array contents
+    for (var playerIndex = 0; playerIndex <= 1; playerIndex++) {
+
+      for (var i = 0; i < data.gamestate.zones[playerIndex].hand.length; i++) {
+       var cid = data.gamestate.zones[playerIndex].hand[i];
+       moveCardToZone(cid, ZoneEnum.HAND, false, false);
+      }
+
+      for (var i = 0; i < data.gamestate.zones[playerIndex].library.length; i++) {
+        var cid = data.gamestate.zones[playerIndex].library[i];
+        moveCardToZone(cid, ZoneEnum.LIBRARY, false, false);
+      }
+
+      for (var i = 0; i < data.gamestate.zones[playerIndex].graveyard.length; i++) {
+        var cid = data.gamestate.zones[playerIndex].graveyard[i];
+        moveCardToZone(cid, ZoneEnum.GRAVEYARD, false, false);
+      }
+
+      for (var i = 0; i < data.gamestate.zones[playerIndex].exile.length; i++) {
+        var cid = data.gamestate.zones[playerIndex].exile[i];
+        var faceDown = !g_directory[cid].faceUp;
+        moveCardToZone(cid, ZoneEnum.EXILE, faceDown, false);
+      }
+    }
+    
+    enableInteractivity();
+  });
+
+  g_client_io.on('card_moved', function(data) {
+
+    moveCardToZone(data.cid, data.toZone, data.faceDown, false);
+
+    if (data.toZone === ZoneEnum.BATTLEFIELD) {
+      var $cardHandle = g_directory[data.cid].handle;
+      $cardHandle.css("top", "auto");
+      $cardHandle.css("bottom", data.y + "px");
+      $cardHandle.css("left", data.x + "px");
+      $cardHandle.css("right", "auto");
+    }
+  });
+
+}
+
 function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flipped, p_transformed, p_counters) {
 
   // 'static' counter for incrementing card IDs

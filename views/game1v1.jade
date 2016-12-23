@@ -19,12 +19,11 @@ html
 
       $(document).ready(function() {
 
-        // FIXME move all this into gameplay.js ?
-        
-        initGlobals();
-        
         var client_io = io('/game1v1');
         window.g_client_io = client_io;
+
+        initGlobals();
+        setClientIOCallbacks();
 
         client_io.on('connect', function(data) {
 
@@ -44,66 +43,7 @@ html
           client_io.emit('join_room', { userid: '#{user.id}',
                                         roomid: params.room });
         });
-        
-        client_io.on('duplicate_user_connect', function() {
-          alert('You have entered the room in a separate window, disconnecting this instance.');
-          
-          // FIXME test to make sure this actually severs the socket connection
-          client_io.disconnect();
-        });
 
-        client_io.on('initialize_gamestate', function(data) {
-        
-          // iterate over all the cards in the gamestate array, assigning card ownership based on data.role
-          for (var i = 0; i < data.gamestate.cards.length; i++) {
-            var card = data.gamestate.cards[i];
-            var is_owner = (data.role === card.owner);
-            generateCard(is_owner, card.imageurl, card.x, card.y, card.faceDown, card.tapped, card.flipped, card.transformed, card.counters);
-          }
-
-          // move each player's cards to various zones depending on the zone array contents
-          for (var playerIndex = 0; playerIndex <= 1; playerIndex++) {
-
-            for (var i = 0; i < data.gamestate.zones[playerIndex].hand.length; i++) {
-             var cid = data.gamestate.zones[playerIndex].hand[i];
-             moveCardToZone(cid, ZoneEnum.HAND, false, false);
-            }
-  
-            for (var i = 0; i < data.gamestate.zones[playerIndex].library.length; i++) {
-              var cid = data.gamestate.zones[playerIndex].library[i];
-              moveCardToZone(cid, ZoneEnum.LIBRARY, false, false);
-            }
-  
-            for (var i = 0; i < data.gamestate.zones[playerIndex].graveyard.length; i++) {
-              var cid = data.gamestate.zones[playerIndex].graveyard[i];
-              moveCardToZone(cid, ZoneEnum.GRAVEYARD, false, false);
-            }
-  
-            for (var i = 0; i < data.gamestate.zones[playerIndex].exile.length; i++) {
-              var cid = data.gamestate.zones[playerIndex].exile[i];
-              var faceDown = !g_directory[cid].faceUp;
-              moveCardToZone(cid, ZoneEnum.EXILE, faceDown, false);
-            }
-          }
-
-          enableInteractivity();
-
-        });
-        
-        client_io.on('card_moved', function(data) {
-
-          moveCardToZone(data.cid, data.toZone, data.faceDown, false);
-
-          // FIXME set x,y coords
-          //$("#h" + data.cid).position({
-          //  of: $("#h" + data.cid).parent(),
-          //  my: 'left top',
-          //  at: 'left top',
-          //  offset: data.x + ' ' + data.y
-          //});
-
-        });
-        
       });
 
 
