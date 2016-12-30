@@ -82,14 +82,13 @@ TODO
  x modify moveCardToZone() to accept a boolean parameter representing a card's ownership
 
 
-12/22/16: 
- / send card movement across socket to opponent
-   - update the x/y accurately
+12/26/16: 
+ - reimplement right click menu
+   - remove the old one
+   - http://www.javascripttoolbox.com/lib/contextmenu/
  - send card status change across socket (tap, counters, flip, transform, etc)
-
- - move the majority of the javascript from game1v1.jade into gameplay.js
- - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
  - add info zone to the left (or right?)
+ - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
 
 
  MAJOR TODO ITEMS
@@ -103,7 +102,6 @@ TODO
 
 
  GAMEPLAY TODO
- - fix the right click menu (broken during port to c9)
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die

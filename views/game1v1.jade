@@ -39,7 +39,6 @@ html
           }
           
           // FIXME add error checking for room id is not found
-          // FIXME debugging line: alert(params.room);
           client_io.emit('join_room', { userid: '#{user.id}',
                                         roomid: params.room });
         });

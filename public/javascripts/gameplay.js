@@ -73,13 +73,8 @@ function setClientIOCallbacks() {
   g_client_io.on('card_moved', function(data) {
 
     moveCardToZone(data.cid, data.toZone, data.faceDown, false);
-
     if (data.toZone === ZoneEnum.BATTLEFIELD) {
-      var $cardHandle = g_directory[data.cid].handle;
-      $cardHandle.css("top", "auto");
-      $cardHandle.css("bottom", data.y + "px");
-      $cardHandle.css("left", data.x + "px");
-      $cardHandle.css("right", "auto");
+      updateCardBFPosition(data.cid, data.x, data.y);
     }
   });
 
@@ -146,18 +141,7 @@ function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flippe
 
   // FIXME apply visual effects of flipped/transformed/morphed etc here
 
-  if (p_owned) {
-    $cardHandle.css("top", p_y);
-    $cardHandle.css("bottom", "auto");
-    $cardHandle.css("left", p_x);
-    $cardHandle.css("right", "auto");
-  }
-  else {
-    $cardHandle.css("top", "auto");
-    $cardHandle.css("bottom", p_y);
-    $cardHandle.css("left", p_x);
-    $cardHandle.css("right", "auto");
-  }
+  updateCardBFPosition(cid, p_x, p_y);
 }
 
 // return the cid given a jquery handle to an element
@@ -396,6 +380,23 @@ function updateCardPosition(p_cid, p_toZone) {
         break;
     }
     
+  }
+}
+
+function updateCardBFPosition(p_cid, p_x, p_y) {
+
+  var $cardHandle = g_directory[p_cid].handle;
+  if (g_directory[p_cid].owned) {
+    $cardHandle.css("top", p_y + "px");
+    $cardHandle.css("bottom", "auto");
+    $cardHandle.css("left", p_x + "px");
+    $cardHandle.css("right", "auto");
+  }
+  else {
+    $cardHandle.css("top", "auto");
+    $cardHandle.css("bottom", p_y + "px");
+    $cardHandle.css("left", p_x + "px");
+    $cardHandle.css("right", "auto");
   }
 }
 
