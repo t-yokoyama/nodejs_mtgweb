@@ -586,26 +586,6 @@ function enableInteractivity() {
       // FIXME be sure to call unhighlightCard on an opponent's card that just got moved
   });
 
-  // uses the bootstrap-contextmenu library to implement a right-click menu
-  $('.rcmenu_target').contextmenu({
-    target: '#rcmenu_forcards',
-    before: function (e, context) {
-      g_rcmenuActive = true;
-      g_rcCardId = getCID(context);
-      highlightCard(g_rcCardId);
-      
-      // this.getMenu().find("li").eq(2).find('a').html("This was dynamically changed");
-    },
-    onItem: function (context, e) {
-      // alert($(e.target).text());
-    }
-  });
-
-  $('#rcmenu_forcards').on('hidden.bs.context', function (e) {
-    g_rcmenuActive = false;
-    unhighlightCard(g_rcCardId);
-  });
-
   // left mouse click to tap/untap a card
   $(".cardhandle_owned").click(function() {
     var cid = getCID($(this));
@@ -622,6 +602,55 @@ function enableInteractivity() {
     }
   });
 
+  // right mouse click to bring up a menu
+  $('.rcmenu_target').on('contextmenu', function(e) {
+
+    g_rcmenuActive = true;
+    g_rcCardId = getCID($(this));
+    highlightCard(g_rcCardId);
+
+    // code below mostly borrowed from jquery-simple-context-menu
+    
+    var menu = createRCMenu(e).show();
+    
+    var left = e.pageX + 5, /* nudge to the right, so the pointer is covering the title */
+        top = e.pageY;
+    if (top + menu.height() >= $(window).height()) {
+        top -= menu.height();
+    }
+    if (left + menu.width() >= $(window).width()) {
+        left -= menu.width();
+    }
+
+    // create and show menu
+    menu.css({zIndex:200000001, left:left, top:top})
+      .on('contextmenu', function() { return false; });
+
+    // cover rest of page with invisible div that when clicked will cancel the popup.
+    var bg = $('<div></div>')
+      .css({left:0, top:0, width:'100%', height:'100%', position:'absolute', zIndex:200000000})
+      .appendTo(document.body)
+      .on('contextmenu click', function() {
+        // if click or right click anywhere else on page: remove clean up.
+        bg.remove();
+        menu.remove();
+        g_rcmenuActive = false;
+        unhighlightCard(g_rcCardId);
+        return false;
+      });
+
+    // when clicking on a link in menu: clean up (in addition to handlers on link already)
+    menu.find('a').click(function() {
+      bg.remove();
+      menu.remove();
+      g_rcmenuActive = false;
+      unhighlightCard(g_rcCardId);
+    });
+
+    // cancel event, so real browser popup doesn't appear.
+    return false;
+  });
+  
   window.onkeydown = function(e) {
     var key = e.which;
     switch(key) {
@@ -641,3 +670,48 @@ function enableInteractivity() {
   }
 
 }
+
+function createRCMenu(e) {
+
+  var menuTitle = undefined;
+  var menuItems = [
+    { label:'Some Item',     icon:'images/icons/shopping-basket.png',     action:function() { alert('clicked 1') } },
+    { label:'Another Thing', icon:'images/icons/receipt-text.png',        action:function() { alert('clicked 2') } },
+    null, // divider
+    { label:'Blah Blah',     icon:'images/icons/book-open-list.png',      action:function() { alert('clicked 3') } }
+  ];
+
+  // code below mostly borrowed from jquery-simple-context-menu
+
+  var menu = $('<ul class="contextMenuPlugin"><div class="gutterLine"></div></ul>')
+    .appendTo(document.body);
+  if (menuTitle) {
+    $('<li class="header"></li>').text(menuTitle).appendTo(menu);
+  }
+  menuItems.forEach(function(item) {
+    if (item) {
+      var rowCode = '<li><a href="#" class="contextMenuLink"><span class="itemTitle"></span></a></li>';
+      var row = $(rowCode).appendTo(menu);
+      if(item.icon){
+        var icon = $('<img>');
+        icon.attr('src', item.icon);
+        icon.insertBefore(row.find('.itemTitle'));
+      }
+      row.find('.itemTitle').text(item.label);
+        
+      if (item.isEnabled != undefined && !item.isEnabled()) {
+          row.addClass('disabled');
+      } else if (item.action) {
+          row.find('.contextMenuLink').click(function () { item.action(e); });
+      }
+
+    } else {
+      $('<li class="divider"></li>').appendTo(menu);
+    }
+  });
+  menu.find('.header').text(menuTitle);
+  return menu;
+}
+
+
+

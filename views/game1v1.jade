@@ -5,14 +5,13 @@ html
 
     title 1v1 Game
 
-    link(href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css", rel="stylesheet")
+    link(href="stylesheets/jquery.contextmenu.css", rel="stylesheet")
     link(href="stylesheets/gameplay.css", rel="stylesheet")
 
     script(src="https://cdn.socket.io/socket.io-1.2.0.js")
     script(src='https://code.jquery.com/jquery-1.9.1.min.js')
     script(src="https://code.jquery.com/ui/1.11.4/jquery-ui.js")
-
-    script(src="javascripts/bootstrap-contextmenu.js")
+    // script(src="javascripts/jquery.contextmenu.js")
     script(src="javascripts/gameplay.js")
 
     script.
@@ -60,12 +59,4 @@ html
           div(class="zone", id="graveyard") graveyard
           div(class="zone", id="exile") exile
           div(class="zone", id="hand") hand
-
-    div(id="rcmenu_forcards")
-      ul(class="dropdown-menu", role="menu")
-        li: a(tabindex="-1") Action
-        li: a(tabindex="-1") Another action
-        li: a(tabindex="-1") Something else here
-        li(class="divider")
-        li: a(tabindex="-1") Separated link
 

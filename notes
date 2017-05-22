@@ -83,9 +83,7 @@ TODO
 
 
 12/26/16: 
- - reimplement right click menu
-   - remove the old one
-   - http://www.javascripttoolbox.com/lib/contextmenu/
+ x reimplement right click menu
  - send card status change across socket (tap, counters, flip, transform, etc)
  - add info zone to the left (or right?)
  - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
