@@ -374,6 +374,11 @@ module.exports = function(app, server) {
 
 
 
+  // FIXME remove this from the release version
+  initialize_test_game(games);
+
+
+
   var game1v1_io = io.of('/game1v1');
   game1v1_io.on('connection', function(socket){
 
@@ -571,3 +576,76 @@ var getNextColor = function (used_colors) {
   return -1; // this should never happen
 }
 
+
+
+// FIXME remove this from the release version
+var initialize_test_game = function (games) {
+
+  games[0] = { sender_uid: 1,
+               sender_lobby_sid: -1,
+               sender_did: -1,
+               sender_state: 'ROOM_OPENED',
+               sender_game_sid: -1,
+               recipient_uid: -1,
+               recipient_lobby_sid: -1,
+               recipient_did: -1,
+               recipient_state: 'ROOM_OPENED',
+               recipient_game_sid: -1,
+               gamestate: { cards: [],
+                            zones: [ { hand: [], library: [], graveyard: [], exile: [] } ,
+                                     { hand: [], library: [], graveyard: [], exile: [] } ] } };
+
+  db.query(
+    'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+    [1],
+    function(err, result1) {
+      if (err) {
+        return console.error('error running query', err);
+      }
+      var cid = 0;
+      for(var i = 0; i < result1.rows.length; i++) {
+        for(var j = 0; j < result1.rows[i].qty; j++) {
+          games[0].gamestate.cards[cid] = { imageurl: result1.rows[i].imageurl,
+                                            x: 0,
+                                            y: 0,
+                                            faceDown: true,
+                                            tapped: false,
+                                            flipped: false,
+                                            transformed: false,
+                                            counters: 0,
+                                            owner: 0
+                                          };
+          games[0].gamestate.zones[0].library.push(cid);
+          cid++;
+        }
+      }
+
+      db.query(
+        'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+        [2],
+        function(err, result2) {
+          if (err) {
+            return console.error('error running query', err);
+          }
+          for(var i = 0; i < result2.rows.length; i++) {
+            for(var j = 0; j < result2.rows[i].qty; j++) {
+              games[0].gamestate.cards[cid] = { imageurl: result2.rows[i].imageurl, 
+                                                x: 0,
+                                                y: 0,
+                                                faceDown: true,
+                                                tapped: false,
+                                                flipped: false,
+                                                transformed: false,
+                                                counters: 0,
+                                                owner: 1
+                                              };
+              games[0].gamestate.zones[1].library.push(cid);
+              cid++;
+            }
+          }
+        }
+      ); // recipient deck db query
+    }
+  ); // sender deck db query
+
+}

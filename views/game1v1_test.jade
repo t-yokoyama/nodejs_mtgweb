@@ -3,7 +3,7 @@ html
 
   head
 
-    title 1v1 Game
+    title 1v1 Game Test
 
     link(href="stylesheets/jquery.contextmenu.css", rel="stylesheet")
     link(href="stylesheets/gameplay.css", rel="stylesheet")
@@ -25,21 +25,8 @@ html
 
         client_io.on('connect', function(data) {
 
-          // extract the room id from the url and join that room
-          var params = {};
-          if (location.search) {
-            var parts = location.search.substring(1).split('&');
-            for (var i = 0; i < parts.length; i++) {
-              var nv = parts[i].split('=');
-              if (!nv[0]) continue;
-              params[nv[0]] = nv[1] || true;
-            }
-          }
-          
-          // FIXME add error checking for if user.id is not found
-          // FIXME add error checking for room id is not found
-          client_io.emit('join_room', { userid: '#{user.id}',
-                                        roomid: params.room });
+          client_io.emit('join_room', { userid: 1,
+                                        roomid: 0 });
         });
 
       });

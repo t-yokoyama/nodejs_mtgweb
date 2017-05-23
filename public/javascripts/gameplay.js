@@ -623,12 +623,12 @@ function enableInteractivity() {
     }
 
     // create and show menu
-    menu.css({zIndex:200000001, left:left, top:top})
+    menu.css({zIndex: ZTOP + 2, left:left, top:top})
       .on('contextmenu', function() { return false; });
 
     // cover rest of page with invisible div that when clicked will cancel the popup.
     var bg = $('<div></div>')
-      .css({left:0, top:0, width:'100%', height:'100%', position:'absolute', zIndex:200000000})
+      .css({left:0, top:0, width:'100%', height:'100%', position:'absolute', zIndex: ZTOP + 1})
       .appendTo(document.body)
       .on('contextmenu click', function() {
         // if click or right click anywhere else on page: remove clean up.

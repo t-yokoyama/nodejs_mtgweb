@@ -52,22 +52,13 @@ module.exports = function(app, passport) {
     res.render('game1v1', { user: req.user });
   });
 
-  // FIXME protect this with authentication
-  app.get('/gameplay', function(req, res) {
-    db.query(
-      'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
-      ['1'], // deck id
-      function(err, result) {
-        if (err) {
-          return console.error('error running query', err);
-        }
-        res.render('gameplay', {decklist: result.rows});
-      }
-    );
+  // FIXME for testing only
+  app.get('/game1v1_test', function(req, res) {
+    res.render('game1v1_test');
   });
 
-  // FIXME this is a dummy placeholder
-  app.get('/gameplay_test', function(req, res) {
+  // FIXME this is a just a reference
+  app.get('/jade_test', function(req, res) {
 
     db.query(
       'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
@@ -85,7 +76,7 @@ module.exports = function(app, passport) {
               return console.error('error running query', err);
             }
 
-            res.render('gameplay_test', {my_decklist: my_result.rows, opp_decklist: opp_result.rows});
+            res.render('jade_test', {my_decklist: my_result.rows, opp_decklist: opp_result.rows});
           }
         );
 
