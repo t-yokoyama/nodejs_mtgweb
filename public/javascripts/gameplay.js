@@ -24,6 +24,7 @@ function initGlobals() {
   window.g_rcCardId = -1;
 }
 
+
 function setClientIOCallbacks() {
 
   g_client_io.on('duplicate_user_connect', function() {
@@ -62,7 +63,7 @@ function setClientIOCallbacks() {
 
       for (var i = 0; i < data.gamestate.zones[playerIndex].exile.length; i++) {
         var cid = data.gamestate.zones[playerIndex].exile[i];
-        var faceDown = !g_directory[cid].faceUp;
+        var faceDown = g_directory[cid].faceDown;
         moveCardToZone(cid, ZoneEnum.EXILE, faceDown, false);
       }
     }
@@ -78,7 +79,24 @@ function setClientIOCallbacks() {
     }
   });
 
+  g_client_io.on('card_changed', function(data) {
+
+    var card = g_directory[data.cid];
+    
+    if (card.faceDown != data.faceDown)
+      changeCardStateFace(data.cid);
+    if (card.tapped != data.tapped)
+      changeCardStateTap(data.cid);
+    if (card.flipped != data.flipped)
+      changeCardStateFlip(data.cid);
+    if (card.transformed != data.transformed)
+      changeCardStateTransform(data.cid);
+
+    // FIXME
+    
+  });
 }
+
 
 function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flipped, p_transformed, p_counters) {
 
@@ -120,29 +138,29 @@ function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flippe
     canvas : $cardCanvas,
     handle : $cardHandle,
     imgSrc : "url(" + p_image + ")",
+    imgSrc2 : "url(" + p_image + ")",
     owned: p_owned,
     zone : ZoneEnum.BATTLEFIELD,
     faceDown : p_faceDown,
-    tapped : p_tapped,
-    flipped : p_flipped,
+    tapped : false,
+    flipped : false,
     transformed : p_transformed,
-    numCounters : p_counters
+    counters : 0
   };
   
   g_directory.push(cardEntry);
 
   $cardCanvas.css("zIndex", 10); // FIXME
-  if (p_faceDown) {
-    $cardCanvas.css("background-image", "url(images/back.jpg)");
-  }
-  else {
-    $cardCanvas.css("background-image", "url(" + p_image + ")");
-  }
 
-  // FIXME apply visual effects of flipped/transformed/morphed etc here
+  if (p_tapped)
+    changeCardStateTap(cid);
+  if (p_flipped)
+    changeCardStateFlip(cid);
 
+  updateCardFace(cid);
   updateCardBFPosition(cid, p_x, p_y);
 }
+
 
 // return the cid given a jquery handle to an element
 function getCID($element) {
@@ -158,15 +176,74 @@ function getCID($element) {
 }
 
 
+function changeCardStateTap(p_cid) {
+  var card = g_directory[p_cid];
+  if (!card.tapped) {
+    card.tapped = true;
+    card.canvas.addClass("cardcanvas_tapped");
+  }
+  else {
+    card.tapped = false;
+    card.canvas.removeClass("cardcanvas_tapped");
+  }
+}
+
+
+function changeCardStateFace(p_cid) {
+  var card = g_directory[p_cid];
+  card.faceDown = !card.faceDown;
+  updateCardFace(p_cid);
+}
+
+
+function changeCardStateFlip(p_cid) {
+  var card = g_directory[p_cid];
+  if (!card.flipped) {
+    card.flipped = true;
+    if (card.owned)
+      card.handle.addClass("cardhandle_upsidedown");
+    else
+      card.handle.removeClass("cardhandle_upsidedown");
+  }
+  else {
+    card.flipped = false;
+    if (card.owned)
+      card.handle.removeClass("cardhandle_upsidedown");
+    else
+      card.handle.addClass("cardhandle_upsidedown");
+  }
+}
+
+
+function changeCardStateTransform(p_cid) {
+  var card = g_directory[p_cid];
+  card.transformed = !card.transformed;
+  updateCardFace(p_cid);
+}
+
+
+function emitCardState(p_cid) {
+  var card = g_directory[p_cid];
+  g_client_io.emit('card_changed', { cid: p_cid,
+                                     faceDown: card.faceDown,
+                                     tapped: card.tapped,
+                                     flipped: card.flipped,
+                                     transformed: card.transformed,
+                                     counters: card.counters
+                                   });
+}
+
+
 function moveCardToZone(p_cid, p_toZone, p_shiftHeld, p_notifyServer) {
 
-  var $cardCanvas = g_directory[p_cid].canvas;
-  var ownerIndex = (g_directory[p_cid].owned) ? 0 : 1;
+  var card = g_directory[p_cid];
+  var $cardCanvas = card.canvas;
+  var ownerIndex = (card.owned) ? 0 : 1;
 
   // update card position (regardless of zone change)
   updateCardPosition(p_cid, p_toZone);
 
-  var fromZone = g_directory[p_cid].zone;
+  var fromZone = card.zone;
 
   // notify server/opponent of state change
   if (p_notifyServer) {
@@ -244,57 +321,60 @@ function moveCardToZone(p_cid, p_toZone, p_shiftHeld, p_notifyServer) {
   }
 
   // switch on dest zone, then add to new array
-  var turnFaceUp;
+  var resetState = false;
+  var turnFaceDown = false;
   switch(p_toZone) {
 
     case ZoneEnum.BATTLEFIELD:
-      turnFaceUp = !p_shiftHeld;
+      resetState = false;
+      turnFaceDown = p_shiftHeld;
       break;
 
     case ZoneEnum.HAND:
       g_hand[ownerIndex].push(p_cid);
-      turnFaceUp = (g_directory[p_cid].owned);
+      resetState = true;
+      turnFaceDown = false;
       refHand = true;
       break;
 
     case ZoneEnum.LIBRARY:
       g_library[ownerIndex].push(p_cid);
-      turnFaceUp = false;
+      resetState = true;
+      turnFaceDown = false;
       refLibrary = true;
       break;
 
     case ZoneEnum.GRAVEYARD:
       g_graveyard[ownerIndex].push(p_cid);
-      turnFaceUp = true;
+      resetState = true;
+      turnFaceDown = false;
       refGraveyard = true;
       break;
 
     case ZoneEnum.EXILE:
       g_exile[ownerIndex].push(p_cid);
-      turnFaceUp = !p_shiftHeld;
+      resetState = true;
+      turnFaceDown = p_shiftHeld;
       $cardCanvas.addClass("cardcanvas_exiled");
       refExile = true;
       break;
   }
 
-  $cardCanvas.removeClass("cardcanvas_tapped");
-
   // update directory
-  g_directory[p_cid].zone = p_toZone;
-  g_directory[p_cid].tapped = false;
-  g_directory[p_cid].flipped = false;
-  g_directory[p_cid].transformed = false;
-  g_directory[p_cid].numCounters = 0;
+  card.zone = p_toZone;
+  card.faceDown = turnFaceDown;
+  if (resetState) {
+    if (card.tapped) {
+      changeCardStateTap(p_cid);
+    }
+    if (card.flipped) {
+      changeCardStateFlip(p_cid);
+    }
+    card.transformed = false;
+    card.counters = 0;
+  }
 
-  // toggle face up/down as appropriate
-  if (!g_directory[p_cid].faceDown && !turnFaceUp) {
-    $cardCanvas.css("background-image", "url(images/back.jpg)");
-    g_directory[p_cid].faceDown = true;
-  }
-  else if (g_directory[p_cid].faceDown && turnFaceUp) {
-    $cardCanvas.css("background-image", g_directory[p_cid].imgSrc);
-    g_directory[p_cid].faceDown = false;
-  }
+  updateCardFace(p_cid);
 
   // refresh display on both to/from zones
   if (refHand) {
@@ -310,6 +390,7 @@ function moveCardToZone(p_cid, p_toZone, p_shiftHeld, p_notifyServer) {
     refreshExile(ownerIndex);
   }
 }
+
 
 function updateCardPosition(p_cid, p_toZone) {
 
@@ -383,6 +464,7 @@ function updateCardPosition(p_cid, p_toZone) {
   }
 }
 
+
 function updateCardBFPosition(p_cid, p_x, p_y) {
 
   var $cardHandle = g_directory[p_cid].handle;
@@ -399,6 +481,55 @@ function updateCardBFPosition(p_cid, p_x, p_y) {
     $cardHandle.css("right", "auto");
   }
 }
+
+
+function updateCardFace(p_cid) {
+  
+  // there are potentially three faces to show
+  var showBack = false;
+  var showAlt = false;
+
+  var card = g_directory[p_cid];
+
+  switch(card.zone) {
+
+    case ZoneEnum.BATTLEFIELD:
+      if (card.faceDown) {
+        showBack = true;
+      }
+      else if (card.transformed) {
+        showAlt = true;
+      }
+      break;
+
+    case ZoneEnum.HAND:
+      showBack = !card.owned;
+      break;
+
+    case ZoneEnum.LIBRARY:
+      showBack = true;
+      break;
+
+    case ZoneEnum.GRAVEYARD:
+      // always show face up
+      break;
+
+    case ZoneEnum.EXILE:
+      showBack = card.faceDown;
+      break;
+  }
+
+  if (showBack) {
+    card.canvas.css("background-image", "url(images/back.jpg)");
+  }
+  else if (showAlt) {
+    card.canvas.css("background-image", card.imgSrc2);
+  }
+  else {
+    card.canvas.css("background-image", card.imgSrc);
+  }
+}
+
 
 function refreshLibrary(p_ownerIndex) {
   var offset = $("#library").offset();
@@ -424,6 +555,7 @@ function refreshLibrary(p_ownerIndex) {
   }
 }
 
+
 function refreshGraveyard(p_ownerIndex) {
   var offset = $("#graveyard").offset();
   if (p_ownerIndex == 1) {
@@ -447,6 +579,7 @@ function refreshGraveyard(p_ownerIndex) {
     }
   }
 }
+
 
 function refreshExile(p_ownerIndex) {
   var offset = $("#exile").offset();
@@ -472,6 +605,7 @@ function refreshExile(p_ownerIndex) {
   }
 }
 
+
 function refreshHand(p_ownerIndex) {
   var offset = $("#hand").offset();
   var totalWidth = $("#hand").width() - 100;
@@ -490,10 +624,12 @@ function refreshHand(p_ownerIndex) {
   }
 }
 
+
 function highlightCard(p_cid) {
   g_directory[p_cid].canvas.addClass("cardcanvas_hover");
   g_directory[p_cid].handle.css("zIndex", ZTOP);
 }
+
 
 function unhighlightCard(p_cid) {
   g_directory[p_cid].canvas.removeClass("cardcanvas_hover");
@@ -589,16 +725,9 @@ function enableInteractivity() {
   // left mouse click to tap/untap a card
   $(".cardhandle_owned").click(function() {
     var cid = getCID($(this));
-    var card = g_directory[cid];
-    if (card.zone === ZoneEnum.BATTLEFIELD) {
-      if (!card.tapped) {
-        card.tapped = true;
-        card.canvas.addClass("cardcanvas_tapped");
-      }
-      else {
-        card.tapped = false;
-        card.canvas.removeClass("cardcanvas_tapped");
-      }
+    if (g_directory[cid].zone === ZoneEnum.BATTLEFIELD) {
+      changeCardStateTap(cid);
+      emitCardState(cid);
     }
   });
 
@@ -671,15 +800,29 @@ function enableInteractivity() {
 
 }
 
+
 function createRCMenu(e) {
 
   var menuTitle = undefined;
-  var menuItems = [
-    { label:'Some Item',     icon:'images/icons/shopping-basket.png',     action:function() { alert('clicked 1') } },
-    { label:'Another Thing', icon:'images/icons/receipt-text.png',        action:function() { alert('clicked 2') } },
-    null, // divider
-    { label:'Blah Blah',     icon:'images/icons/book-open-list.png',      action:function() { alert('clicked 3') } }
-  ];
+  var menuItems = [];
+
+  // FIXME conditonally change labels based on card state
+
+  var card = g_directory[g_rcCardId];
+
+  if (card.zone === ZoneEnum.BATTLEFIELD) {
+
+    var turnLabel = "Turn Face Down";
+    if (card.faceDown)
+      turnLabel = "Turn Face Up";
+  
+    menuItems.push({ label:'Flip',           icon:'images/icons/shopping-basket.png',     action: function() { changeCardStateFlip(g_rcCardId); emitCardState(g_rcCardId); } });
+    menuItems.push({ label: turnLabel,       icon:'images/icons/receipt-text.png',        action: function() { changeCardStateFace(g_rcCardId); emitCardState(g_rcCardId); } });
+    menuItems.push({ label:'Transform',      icon:'images/icons/book-open-list.png',      action: function() { changeCardStateTransform(g_rcCardId); emitCardState(g_rcCardId); } });
+  }
+  else {
+    menuItems.push(null);
+  }
 
   // code below mostly borrowed from jquery-simple-context-menu
 

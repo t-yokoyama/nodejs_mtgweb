@@ -315,7 +315,7 @@ module.exports = function(app, server) {
                   games[data.gameid].gamestate.cards[cid] = { imageurl: result1.rows[i].imageurl,
                                                               x: 0,
                                                               y: 0,
-                                                              faceDown: true,
+                                                              faceDown: false,
                                                               tapped: false,
                                                               flipped: false,
                                                               transformed: false,
@@ -339,7 +339,7 @@ module.exports = function(app, server) {
                       games[data.gameid].gamestate.cards[cid] = { imageurl: result2.rows[i].imageurl, 
                                                                   x: 0,
                                                                   y: 0,
-                                                                  faceDown: true,
+                                                                  faceDown: false,
                                                                   tapped: false,
                                                                   flipped: false,
                                                                   transformed: false,
@@ -503,15 +503,57 @@ module.exports = function(app, server) {
         card.x = data.x;
         card.y = data.y;
       }
+      else {
+        card.tapped = false;
+        card.flipped = false;
+        card.transformed = false;
+        card.counters = 0;
+      }
       if (data.toZone == ZoneEnum.BATTLEFIELD || data.toZone == ZoneEnum.EXILE) {
         card.faceDown = data.faceDown;
+      }
+      else {
+        card.faceDown = false;
       }
 
       // FIXME if after testing it turns out this function never fails, move this emit call to the top of the function to reduce latency
       // pass along the message to the other client(s)
       socket.broadcast.emit('card_moved', data);
 
-      console.log('a card was moved: (' + data.fromZone + ' to ' + data.toZone + ').');
+      console.log('card ' + data.cid + ' was moved: (' + data.fromZone + ' to ' + data.toZone + ').');
+
+    });
+
+
+    socket.on('card_changed', function(data) {
+
+      if (socket.room === undefined) {
+        console.log('card_changed event received on a socket with undefined roomid.');
+        return;
+      }
+
+      var role_index = -1;
+      if (socket.id === games[socket.room].sender_game_sid) {
+        role_index = 0;
+      }
+      else if (socket.id === games[socket.room].recipient_game_sid) {
+        role_index = 1;
+      }
+      if (role_index === -1) {
+        console.log('card_changed event received on a socket with invalid userid.');
+        return;
+      }
+
+      var card = games[socket.room].gamestate.cards[data.cid];
+      card.faceDown = data.faceDown;
+      card.tapped = data.tapped;
+      card.flipped = data.flipped;
+      card.transformed = data.transformed;
+      card.counters = data.counters;
+
+      socket.broadcast.emit('card_changed', data);
+
+      console.log('card ' + data.cid + '\'s state was changed.');
 
     });
 
@@ -608,7 +650,7 @@ var initialize_test_game = function (games) {
           games[0].gamestate.cards[cid] = { imageurl: result1.rows[i].imageurl,
                                             x: 0,
                                             y: 0,
-                                            faceDown: true,
+                                            faceDown: false,
                                             tapped: false,
                                             flipped: false,
                                             transformed: false,
@@ -632,7 +674,7 @@ var initialize_test_game = function (games) {
               games[0].gamestate.cards[cid] = { imageurl: result2.rows[i].imageurl, 
                                                 x: 0,
                                                 y: 0,
-                                                faceDown: true,
+                                                faceDown: false,
                                                 tapped: false,
                                                 flipped: false,
                                                 transformed: false,

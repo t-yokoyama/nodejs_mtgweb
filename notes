@@ -80,12 +80,20 @@ TODO
  x in the initialize_gamestate event client-side, iterate over all the cards and call generateCard on them as appropriate
  x make the global zone arrays (g_library, etc) double-indexed [2] to represent both our and our opponent's zones
  x modify moveCardToZone() to accept a boolean parameter representing a card's ownership
-
-
-12/26/16: 
  x reimplement right click menu
  - send card status change across socket (tap, counters, flip, transform, etc)
+
+
+5/23/17:
+ - right menu: conditonally change labels based on card state
+ - implement imgSrc2
+ - implement db flippable/transformable
+ - num counters
+ - right menu icons
+
+ 
  - add info zone to the left (or right?)
+ - make global vars not trigger warning in gameplay.js
  - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
 
 
@@ -101,6 +109,7 @@ TODO
 
  GAMEPLAY TODO
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)
+   - invert the z-index calculation for opponent's cards
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
  - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
  - figure out how to conditionally gray out certain rcmenu items
