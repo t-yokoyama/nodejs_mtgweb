@@ -40,7 +40,7 @@ function setClientIOCallbacks() {
     for (var i = 0; i < data.gamestate.cards.length; i++) {
       var card = data.gamestate.cards[i];
       var is_owner = (data.role === card.owner);
-      generateCard(is_owner, card.imageurl, card.x, card.y, card.faceDown, card.tapped, card.flipped, card.transformed, card.counters);
+      generateCard(is_owner, card.imageurl, card.imageurl2, card.frametype, card.x, card.y, card.faceDown, card.tapped, card.flipped, card.transformed, card.counters);
     }
 
     // move each player's cards to various zones depending on the zone array contents
@@ -98,7 +98,7 @@ function setClientIOCallbacks() {
 }
 
 
-function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flipped, p_transformed, p_counters) {
+function generateCard(p_owned, p_image, p_image2, p_frame, p_x, p_y, p_faceDown, p_tapped, p_flipped, p_transformed, p_counters) {
 
   // 'static' counter for incrementing card IDs
   if (typeof generateCard.numGenerated == 'undefined') {
@@ -138,8 +138,9 @@ function generateCard(p_owned, p_image, p_x, p_y, p_faceDown, p_tapped, p_flippe
     canvas : $cardCanvas,
     handle : $cardHandle,
     imgSrc : "url(" + p_image + ")",
-    imgSrc2 : "url(" + p_image + ")",
-    owned: p_owned,
+    imgSrc2 : "url(" + p_image2 + ")",
+    frame : p_frame,
+    owned : p_owned,
     zone : ZoneEnum.BATTLEFIELD,
     faceDown : p_faceDown,
     tapped : false,
@@ -806,7 +807,7 @@ function createRCMenu(e) {
   var menuTitle = undefined;
   var menuItems = [];
 
-  // FIXME conditonally change labels based on card state
+  // FIXME conditonally change labels based on card frame type
 
   var card = g_directory[g_rcCardId];
 
@@ -816,9 +817,18 @@ function createRCMenu(e) {
     if (card.faceDown)
       turnLabel = "Turn Face Up";
   
-    menuItems.push({ label:'Flip',           icon:'images/icons/shopping-basket.png',     action: function() { changeCardStateFlip(g_rcCardId); emitCardState(g_rcCardId); } });
-    menuItems.push({ label: turnLabel,       icon:'images/icons/receipt-text.png',        action: function() { changeCardStateFace(g_rcCardId); emitCardState(g_rcCardId); } });
-    menuItems.push({ label:'Transform',      icon:'images/icons/book-open-list.png',      action: function() { changeCardStateTransform(g_rcCardId); emitCardState(g_rcCardId); } });
+    menuItems.push({ label: turnLabel,
+                     icon:'images/icons/icon1.png',
+                     isEnabled: function() { return true; },
+                     action: function() { changeCardStateFace(g_rcCardId); emitCardState(g_rcCardId); } });
+    menuItems.push({ label:'Flip',
+                     icon:'images/icons/icon2.png',
+                     isEnabled: function() { return (g_directory[g_rcCardId].frame === 2); },
+                     action: function() { changeCardStateFlip(g_rcCardId); emitCardState(g_rcCardId); } });
+    menuItems.push({ label:'Transform',
+                     icon:'images/icons/icon3.png',
+                     isEnabled: function() { return (g_directory[g_rcCardId].frame === 3); },
+                     action: function() { changeCardStateTransform(g_rcCardId); emitCardState(g_rcCardId); } });
   }
   else {
     menuItems.push(null);

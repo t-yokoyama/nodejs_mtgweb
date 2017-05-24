@@ -303,7 +303,7 @@ module.exports = function(app, server) {
             games[data.gameid].recipient_state == 'CONFIGURED') {
 
           db.query(
-            'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+            'SELECT c.imageurl, c.imageurl2, c.layout, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
             [games[data.gameid].sender_did],
             function(err, result1) {
               if (err) {
@@ -313,6 +313,8 @@ module.exports = function(app, server) {
               for(var i = 0; i < result1.rows.length; i++) {
                 for(var j = 0; j < result1.rows[i].qty; j++) {
                   games[data.gameid].gamestate.cards[cid] = { imageurl: result1.rows[i].imageurl,
+                                                              imageurl2: result1.rows[i].imageurl2,
+                                                              frametype: result1.rows[i].layout,
                                                               x: 0,
                                                               y: 0,
                                                               faceDown: false,
@@ -328,7 +330,7 @@ module.exports = function(app, server) {
               }
 
               db.query(
-                'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+                'SELECT c.imageurl, c.imageurl2, c.layout, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
                 [games[data.gameid].recipient_did],
                 function(err, result2) {
                   if (err) {
@@ -337,6 +339,8 @@ module.exports = function(app, server) {
                   for(var i = 0; i < result2.rows.length; i++) {
                     for(var j = 0; j < result2.rows[i].qty; j++) {
                       games[data.gameid].gamestate.cards[cid] = { imageurl: result2.rows[i].imageurl, 
+                                                                  imageurl2: result2.rows[i].imageurl2,
+                                                                  frametype: result2.rows[i].layout,
                                                                   x: 0,
                                                                   y: 0,
                                                                   faceDown: false,
@@ -638,7 +642,7 @@ var initialize_test_game = function (games) {
                                      { hand: [], library: [], graveyard: [], exile: [] } ] } };
 
   db.query(
-    'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+    'SELECT c.imageurl, c.imageurl2, c.layout, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
     [1],
     function(err, result1) {
       if (err) {
@@ -648,6 +652,8 @@ var initialize_test_game = function (games) {
       for(var i = 0; i < result1.rows.length; i++) {
         for(var j = 0; j < result1.rows[i].qty; j++) {
           games[0].gamestate.cards[cid] = { imageurl: result1.rows[i].imageurl,
+                                            imageurl2: result1.rows[i].imageurl2,
+                                            frametype: result1.rows[i].layout,
                                             x: 0,
                                             y: 0,
                                             faceDown: false,
@@ -663,7 +669,7 @@ var initialize_test_game = function (games) {
       }
 
       db.query(
-        'SELECT c.imageurl, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
+        'SELECT c.imageurl, c.imageurl2, c.layout, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
         [2],
         function(err, result2) {
           if (err) {
@@ -672,6 +678,8 @@ var initialize_test_game = function (games) {
           for(var i = 0; i < result2.rows.length; i++) {
             for(var j = 0; j < result2.rows[i].qty; j++) {
               games[0].gamestate.cards[cid] = { imageurl: result2.rows[i].imageurl, 
+                                                imageurl2: result2.rows[i].imageurl2,
+                                                frametype: result2.rows[i].layout,
                                                 x: 0,
                                                 y: 0,
                                                 faceDown: false,
