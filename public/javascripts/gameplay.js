@@ -91,9 +91,9 @@ function setClientIOCallbacks() {
       changeCardStateFlip(data.cid);
     if (card.transformed != data.transformed)
       changeCardStateTransform(data.cid);
+    if (card.counters != data.counters)
+      changeCardStateCounters(data.cid, data.counters);
 
-    // FIXME
-    
   });
 }
 
@@ -157,6 +157,8 @@ function generateCard(p_owned, p_image, p_image2, p_frame, p_x, p_y, p_faceDown,
     changeCardStateTap(cid);
   if (p_flipped)
     changeCardStateFlip(cid);
+  if (p_counters !== 0)
+    changeCardStateCounters(cid, p_counters);
 
   updateCardFace(cid);
   updateCardBFPosition(cid, p_x, p_y);
@@ -220,6 +222,18 @@ function changeCardStateTransform(p_cid) {
   var card = g_directory[p_cid];
   card.transformed = !card.transformed;
   updateCardFace(p_cid);
+}
+
+
+function changeCardStateCounters(p_cid, p_val) {
+  var card = g_directory[p_cid];
+  card.counters = p_val;
+  if (card.counters === 0) {
+    card.canvas.html("");
+  }
+  else {
+    card.canvas.html("+ " + card.counters);
+  }
 }
 
 
@@ -372,7 +386,9 @@ function moveCardToZone(p_cid, p_toZone, p_shiftHeld, p_notifyServer) {
       changeCardStateFlip(p_cid);
     }
     card.transformed = false;
-    card.counters = 0;
+    if (card.counters !== 0) {
+      changeCardStateCounters(p_cid, 0);
+    }
   }
 
   updateCardFace(p_cid);
@@ -813,9 +829,9 @@ function createRCMenu(e) {
 
   if (card.zone === ZoneEnum.BATTLEFIELD) {
 
-    var turnLabel = "Turn Face Down";
+    var turnLabel = "Turn face down";
     if (card.faceDown)
-      turnLabel = "Turn Face Up";
+      turnLabel = "Turn face up";
   
     menuItems.push({ label: turnLabel,
                      icon:'images/icons/icon1.png',
@@ -829,6 +845,15 @@ function createRCMenu(e) {
                      icon:'images/icons/icon3.png',
                      isEnabled: function() { return (g_directory[g_rcCardId].frame === 3); },
                      action: function() { changeCardStateTransform(g_rcCardId); emitCardState(g_rcCardId); } });
+    menuItems.push(null);
+    menuItems.push({ label:'Add a counter',
+                     icon:'images/icons/icon1.png',
+                     isEnabled: function() { return true; },
+                     action: function() { changeCardStateCounters(g_rcCardId, g_directory[g_rcCardId].counters + 1); emitCardState(g_rcCardId); } });
+    menuItems.push({ label:'Remove a counter',
+                     icon:'images/icons/icon1.png',
+                     isEnabled: function() { return (g_directory[g_rcCardId].counters > 0); },
+                     action: function() { changeCardStateCounters(g_rcCardId, g_directory[g_rcCardId].counters - 1); emitCardState(g_rcCardId); } });
   }
   else {
     menuItems.push(null);

@@ -83,10 +83,10 @@ TODO
  x reimplement right click menu
  x send card status change across socket (tap, counters, flip, transform, etc)
  x right menu: conditonally change labels based on card state
+ x implement card counters
 
 
 5/23/17:
- - num counters
  - add info zone to the left (or right?)
  - make global vars not trigger warning in gameplay.js
  - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
