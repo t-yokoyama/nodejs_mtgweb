@@ -35,9 +35,48 @@ html
   body
 
     div(id="window")
+      div(id="info_bar")
+        div(id="zoom_box"  class="info_widget")
+        div(id="status_box" class="info_widget")
+          table
+            thead
+              tr
+                th
+                th
+                th
+                th me
+                th opp.
+            tbody
+              tr
+                td LIFE
+                td
+                  input(id="life_set" class="control_button" type="text" size=1 onkeypress="return event.charCode >= 48 && event.charCode <= 57")
+                  a(class="control_button", href="#") set
+                td
+                  a(class="control_button", href="#") +
+                  a(class="control_button", href="#") -
+                td: div(id="my_life" align="center")
+                td: div(id="opp_life" align="center")
+              tr
+                td POISON
+                td
+                td
+                  a(class="control_button", href="#") +
+                  a(class="control_button", href="#") -
+                td: div(id="my_poison" align="center")
+                td: div(id="opp_poison" align="center")
+              tr
+                td LIBRARY
+                td
+                td
+                td: div(id="my_libsize" align="center")
+                td: div(id="opp_libsize" align="center")
+
+        div(id="control_box" class="info_widget")
+        div(id="chat_box" class="info_widget")
       div(id="battlefield_wrapper")
         div(class="battlefield", id="opp_battlefield") opp_battlefield
-          div(class="zone", id="opp_hand") opp_hand
+          div(class="opp_zone", id="opp_hand") opp_hand
           div(class="opp_zone", id="opp_library") opp_library
           div(class="opp_zone", id="opp_graveyard") opp_graveyard
           div(class="opp_zone", id="opp_exile") opp_exile

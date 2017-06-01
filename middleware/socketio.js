@@ -149,7 +149,10 @@ module.exports = function(app, server) {
                      recipient_did: -1,
                      recipient_state: 'CHALLENGE_RECEIVED',
                      recipient_game_sid: -1,
-                     gamestate: { cards: [],
+                     gamestate: { turn_phase: 0,
+                                  life: [20, 20],
+                                  poison: [0, 0],
+                                  cards: [],
                                   zones: [ { hand: [], library: [], graveyard: [], exile: [] } ,
                                            { hand: [], library: [], graveyard: [], exile: [] } ] } };
 
@@ -637,13 +640,16 @@ var initialize_test_game = function (games) {
                recipient_did: -1,
                recipient_state: 'ROOM_OPENED',
                recipient_game_sid: -1,
-               gamestate: { cards: [],
+               gamestate: { turn_phase: 0,
+                            life: [20, 20],
+                            poison: [0, 0],
+                            cards: [],
                             zones: [ { hand: [], library: [], graveyard: [], exile: [] } ,
                                      { hand: [], library: [], graveyard: [], exile: [] } ] } };
 
   db.query(
     'SELECT c.imageurl, c.imageurl2, c.layout, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
-    [1],
+    [2],
     function(err, result1) {
       if (err) {
         return console.error('error running query', err);
@@ -670,7 +676,7 @@ var initialize_test_game = function (games) {
 
       db.query(
         'SELECT c.imageurl, c.imageurl2, c.layout, dl.qty FROM cards c, decks d, decklists dl WHERE d.id = dl.deck_id AND dl.card_id = c.id AND d.id = $1::int',
-        [2],
+        [1],
         function(err, result2) {
           if (err) {
             return console.error('error running query', err);

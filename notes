@@ -86,10 +86,13 @@ TODO
  x implement card counters
 
 
-5/23/17:
- - add info zone to the left (or right?)
- - make global vars not trigger warning in gameplay.js
- - minor note: be sure to call unhighlightCard() on an opponent's card that just got moved in case user was hovering over it
+6/1/17:
+ - add info zone to the left
+   x zoom zone
+   - status zone: life (+/-/set), poison (+/-), phase, notes
+   - control zone: draw card, shuffle deck, make token (name/p/t), end phase
+   - chat zone
+ - deck builder page
 
 
  MAJOR TODO ITEMS
@@ -114,6 +117,7 @@ TODO
 
 
  MISC TODO
+ - make global vars not trigger warning in gameplay.js
  - right menu icons
  - implement wallpapers (how do we elegantly flip a background?)
  - research reasons to use jquery selector $("#blah") vs document.querySelector("#blah")

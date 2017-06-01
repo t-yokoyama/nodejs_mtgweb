@@ -13,6 +13,11 @@ function initGlobals() {
   window.ZTOP = 100000000;
   window.ZWIDTH = 10000;
 
+  window.g_life = 0;
+  window.g_life_opp = 0;
+  window.g_poison = 0;
+  window.g_poison_opp = 0;
+
   window.g_directory = [];
   window.g_library = [ [], [] ];
   window.g_graveyard = [ [], [] ];
@@ -35,7 +40,7 @@ function setClientIOCallbacks() {
   });
 
   g_client_io.on('initialize_gamestate', function(data) {
-  
+
     // iterate over all the cards in the gamestate array, assigning card ownership based on data.role
     for (var i = 0; i < data.gamestate.cards.length; i++) {
       var card = data.gamestate.cards[i];
@@ -67,7 +72,16 @@ function setClientIOCallbacks() {
         moveCardToZone(cid, ZoneEnum.EXILE, faceDown, false);
       }
     }
-    
+
+    var opp_index = 0;
+    if (data.role === 0)
+      opp_index = 1;
+    g_life = data.gamestate.life[data.role];
+    g_life_opp = data.gamestate.life[opp_index];
+    g_poison = data.gamestate.poison[data.role];
+    g_poison_opp = data.gamestate.poison[opp_index];
+    updateStatusBox();
+ 
     enableInteractivity();
   });
 
@@ -655,6 +669,58 @@ function unhighlightCard(p_cid) {
 }
 
 
+function zoomCard(p_cid) {
+  var card = g_directory[p_cid];
+  var show = false;
+
+  switch(card.zone) {
+
+    case ZoneEnum.BATTLEFIELD:
+      // always show own cards, show opponent's face up cards
+      if (card.owned || !card.faceDown)
+        show = true;
+      break;
+
+    case ZoneEnum.HAND:
+      // always show cards in own hand, never opponent's
+      show = card.owned;
+      break;
+
+    case ZoneEnum.LIBRARY:
+      // library cards should always be hidden
+      show = false;
+      break;
+
+    case ZoneEnum.GRAVEYARD:
+      // always show graveyard cards
+      show = true;
+      break;
+
+    case ZoneEnum.EXILE:
+      // don't even show own cards if face down
+      show = !card.faceDown;
+      break;
+  }
+
+  if (show) {
+    var $zoom = $("#zoom_box");
+    if (card.transformed)
+      $zoom.css("background-image", card.imgSrc2);
+    else $zoom.css("background-image", card.imgSrc);
+  }
+}
+
+
+function updateStatusBox() {
+  $("#my_life").html(g_life);
+  $("#opp_life").html(g_life_opp);
+  $("#my_poison").html(g_poison);
+  $("#opp_poison").html(g_poison_opp);
+  $("#my_libsize").html(g_library[0].length);
+  $("#opp_libsize").html(g_library[1].length);
+}
+
+
 function enableInteractivity() {
 
   $(".cardhandle_owned").draggable({ grid: [5, 20],
@@ -667,10 +733,12 @@ function enableInteractivity() {
   $("#battlefield_wrapper").droppable({
     accept: ".cardhandle_owned",
     drop: function( event, ui ) {
-      moveCardToZone(getCID(ui.draggable),
+      var cid = getCID(ui.draggable);
+      moveCardToZone(cid,
                      ZoneEnum.BATTLEFIELD,
                      g_shiftHeld,
                      true);
+      zoomCard(cid);
     }
   });
 
@@ -679,10 +747,12 @@ function enableInteractivity() {
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
-      moveCardToZone(getCID(ui.draggable),
+      var cid = getCID(ui.draggable);
+      moveCardToZone(cid,
                      ZoneEnum.HAND,
                      g_shiftHeld,
                      true);
+      zoomCard(cid);
     }
   });
 
@@ -703,10 +773,12 @@ function enableInteractivity() {
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
-      moveCardToZone(getCID(ui.draggable),
+      var cid = getCID(ui.draggable);
+      moveCardToZone(cid,
                      ZoneEnum.GRAVEYARD,
                      g_shiftHeld,
                      true);
+      zoomCard(cid);
     }
   });
 
@@ -715,10 +787,12 @@ function enableInteractivity() {
     greedy: true,
     hoverClass: "zone_hover",
     drop: function( event, ui ) {
-      moveCardToZone(getCID(ui.draggable),
+      var cid = getCID(ui.draggable);
+      moveCardToZone(cid,
                      ZoneEnum.EXILE,
                      g_shiftHeld,
                      true);
+      zoomCard(cid);
     }
   });
 
@@ -729,6 +803,7 @@ function enableInteractivity() {
       if (!g_rcmenuActive) {
         var cid = getCID($(this));
         highlightCard(cid);
+        zoomCard(cid);
       }
     },
     function() {
