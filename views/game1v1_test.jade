@@ -34,83 +34,89 @@ html
 
   body
 
-    div(id="window")
-      div(id="info_bar")
-        div(id="zoom_box"  class="info_widget")
-        div(id="status_box")
+    div#window
+      div#info_bar
+        div#zoom_box.info_widget
+        div#status_box
 
-          table(id="phase_widget" class="info_widget")
+          table#phase_widget.info_widget
             tbody
-              tr: td(colspan=7) TURN PHASE
-              tr(class="my_color")
-                td(id="phase_my_0" class="phase_label") UNTAP
-                td(id="phase_my_1" class="phase_label") UPKEEP
-                td(id="phase_my_2" class="phase_label") DRAW
-                td(id="phase_my_3" class="phase_label") MAIN
-                td(id="phase_my_4" class="phase_label") COMBAT
-                td(id="phase_my_5" class="phase_label") MAIN2
-                td(id="phase_my_6" class="phase_label") END
-              tr(class="opp_color")
-                td(id="phase_opp_0" class="phase_label") UNTAP
-                td(id="phase_opp_1" class="phase_label") UPKEEP
-                td(id="phase_opp_2" class="phase_label") DRAW
-                td(id="phase_opp_3" class="phase_label") MAIN
-                td(id="phase_opp_4" class="phase_label") COMBAT
-                td(id="phase_opp_5" class="phase_label") MAIN2
-                td(id="phase_opp_6" class="phase_label") END
-          table(id="status_widget" class="info_widget")
-            tbody
-              tr
-                td LIFE
-                td
-                  input(id="life_val" class="control_button" type="text" size=1 onkeypress="return event.charCode >= 48 && event.charCode <= 57")
-                  a(id="button_life_set" class="control_button", href="#") set
-                td
-                  a(id="button_life_inc" class="control_button", href="#") +
-                  a(id="button_life_dec" class="control_button", href="#") -
-                td(class="my_color"): div(id="my_life")
-                td(class="opp_color"): div(id="opp_life")
-              tr
-                td POISON
-                td
-                td
-                  a(id="button_poison_inc" class="control_button", href="#") +
-                  a(id="button_poison_dec" class="control_button", href="#") -
-                td(class="my_color"): div(id="my_poison")
-                td(class="opp_color"): div(id="opp_poison")
-              tr
-                td LIBRARY
-                td
-                td
-                td(class="my_color"): div(id="my_libsize")
-                td(class="opp_color"): div(id="opp_libsize")
-
-          table(id="control_widget" class="info_widget")
+              tr: td.bold_label(colspan=7) TURN PHASE
+              tr.my_color
+                td#phase_my_0 UNTAP
+                td#phase_my_1 UPKEEP
+                td#phase_my_2 DRAW
+                td#phase_my_3 MAIN
+                td#phase_my_4 COMBAT
+                td#phase_my_5 MAIN2
+                td#phase_my_6 END
+              tr.opp_color
+                td#phase_opp_0 UNTAP
+                td#phase_opp_1 UPKEEP
+                td#phase_opp_2 DRAW
+                td#phase_opp_3 MAIN
+                td#phase_opp_4 COMBAT
+                td#phase_opp_5 MAIN2
+                td#phase_opp_6 END
+          table#status_widget.info_widget
             tbody
               tr
-                td(align="center"): a(id="button_untap" class="control_button action_button", href="#") untap all [U]
-                td(align="center"): a(id="button_shuffle" class="control_button action_button", href="#") shuffle library
+                td.bold_label LIFE
+                td
+                  input#life_val.control_button(type="text" onkeypress="return event.charCode >= 48 && event.charCode <= 57")
+                  a#button_life_set.control_button(href="#") set
+                td
+                  a#button_life_inc.control_button(href="#") +
+                  a#button_life_dec.control_button(href="#") -
+                td.bold_label.my_color: div#my_life
+                td.bold_label.opp_color: div#opp_life
               tr
-                td(align="center"): a(id="button_draw" class="control_button action_button", href="#") draw a card
-                td(align="center"): a(id="button_peek" class="control_button action_button", href="#") look at top card
+                td.bold_label POISON
+                td
+                td
+                  a#button_poison_inc.control_button(href="#") +
+                  a#button_poison_dec.control_button(href="#") -
+                td.bold_label.my_color: div#my_poison
+                td.bold_label.opp_color: div#opp_poison
               tr
-                td(align="center"): a(id="button_flip_coin" class="control_button action_button", href="#") flip a coin
-                td(align="center"): a(id="button_next_phase" class="control_button action_button", href="#") end phase
-              tr
-                td(align="center"): a(id="button_search" class="control_button action_button", href="#") search library
-              tr
-                td(align="center"): a(id="button_create_token" class="control_button action_button", href="#") create token
+                td.bold_label LIBRARY
+                td
+                td
+                td.bold_label.my_color: div#my_libsize
+                td.bold_label.opp_color: div#opp_libsize
 
-        div(id="chat_box" class="info_widget")
-      div(id="battlefield_wrapper")
-        div(class="battlefield opp_color", id="opp_battlefield") opp_battlefield
-          div(class="opp_zone", id="opp_hand") opp_hand
-          div(class="opp_zone", id="opp_library") opp_library
-          div(class="opp_zone", id="opp_graveyard") opp_graveyard
-          div(class="opp_zone", id="opp_exile") opp_exile
-        div(class="battlefield my_color", id="my_battlefield") my_battlefield
-          div(class="zone", id="library") library
-          div(class="zone", id="graveyard") graveyard
-          div(class="zone", id="exile") exile
-          div(class="zone", id="hand") hand
+          table#control_widget.info_widget
+            tbody
+              tr
+                td: a#button_untap.control_button.action_button(href="#") untap all
+                td: a#button_shuffle.control_button.action_button(href="#") shuffle library
+              tr
+                td: a#button_draw.control_button.action_button(href="#") draw a card
+                td: a#button_peek.control_button.action_button(href="#") peek top card
+              tr
+                td: a#button_flip_coin.control_button.action_button(href="#") flip a coin
+                td: a#button_next_phase.control_button.action_button(href="#") end phase
+              tr
+                td: a#button_search.control_button.action_button(href="#") search library
+                td
+                  select.control_button
+                    option(value=1) card 1
+                    option(value=2) card 2
+              tr
+                td: a#button_create_token.control_button.action_button(href="#") create token
+                td NAME 
+                  input#token_name.control_button(type="text")
+
+        div#chat_box.info_widget
+      div#battlefield_wrapper
+        div#opp_battlefield.battlefield.opp_color opp_battlefield
+          div#opp_hand.opp_zone opp_hand
+          div#opp_library.opp_zone opp_library
+          div#opp_graveyard.opp_zone opp_graveyard
+          div#opp_exile.opp_zone.opp_exile opp_exile
+        div#my_battlefield.battlefield.my_color my_battlefield
+          div#library.zone library
+          div#graveyard.zone graveyard
+          div#exile.zone exile
+          div#hand.zone hand
 

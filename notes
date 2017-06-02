@@ -98,6 +98,7 @@ TODO
 
  MAJOR TODO ITEMS
  - make the login page only accessible if no user is logged in, show the profile/dashboard page instead if user is logged in
+ - implement a heartbeat check on socket pages to redirect when server goes down
  - disconnect socket when passport logout detected
    - https://github.com/jfromaniello/passport.socketio
    - http://stackoverflow.com/questions/19106861/authorizing-and-handshaking-with-socket-io
