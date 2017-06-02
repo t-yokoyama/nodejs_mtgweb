@@ -45,8 +45,8 @@ a.control_button:active {
 	top: 1px;
 }
 
-input#life_set {
-  width: 30px;
+input#life_val {
+  width: 28px;
   box-sizing: border-box;
 }
 

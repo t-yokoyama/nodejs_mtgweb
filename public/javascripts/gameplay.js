@@ -107,7 +107,16 @@ function setClientIOCallbacks() {
       changeCardStateTransform(data.cid);
     if (card.counters != data.counters)
       changeCardStateCounters(data.cid, data.counters);
+  });
 
+  g_client_io.on('life_changed', function(data) {
+    g_life_opp = data.val;
+    updateStatusBox();
+  });
+  
+  g_client_io.on('poison_changed', function(data) {
+    g_poison_opp = data.val;
+    updateStatusBox();
   });
 }
 
@@ -420,6 +429,10 @@ function moveCardToZone(p_cid, p_toZone, p_shiftHeld, p_notifyServer) {
   if (refExile) {
     refreshExile(ownerIndex);
   }
+
+  if (fromZone === ZoneEnum.LIBRARY || p_toZone === ZoneEnum.LIBRARY)
+    updateStatusBox();
+
 }
 
 
@@ -890,6 +903,31 @@ function enableInteractivity() {
     }
   }
 
+  $("#life_inc").click(function() {
+    if (g_life < 999)
+      setLife(g_life + 1);
+  });
+
+  $("#life_dec").click(function() {
+    if (g_life > -999)
+      setLife(g_life - 1);
+  });
+
+  $("#life_set").click(function() {
+    var val = $("#life_val").val();
+    if (val.length > 0 && val.length < 4) {
+      setLife(val);
+      $("#life_val").val("");
+    }
+  });
+
+  $("#poison_dec").click(function() {
+    setPoison(g_poison - 1);
+  });
+
+  $("#poison_inc").click(function() {
+    setPoison(g_poison + 1);
+  });
 }
 
 
@@ -967,4 +1005,15 @@ function createRCMenu(e) {
 }
 
 
+function setLife(p_val) {
+  g_life = p_val;
+  updateStatusBox();
+  g_client_io.emit('life_changed', { val: p_val });
+}
 
+
+function setPoison(p_val) {
+  g_poison = p_val;
+  updateStatusBox();
+  g_client_io.emit('poison_changed', { val: p_val });
+}

@@ -539,18 +539,6 @@ module.exports = function(app, server) {
         return;
       }
 
-      var role_index = -1;
-      if (socket.id === games[socket.room].sender_game_sid) {
-        role_index = 0;
-      }
-      else if (socket.id === games[socket.room].recipient_game_sid) {
-        role_index = 1;
-      }
-      if (role_index === -1) {
-        console.log('card_changed event received on a socket with invalid userid.');
-        return;
-      }
-
       var card = games[socket.room].gamestate.cards[data.cid];
       card.faceDown = data.faceDown;
       card.tapped = data.tapped;
@@ -562,6 +550,59 @@ module.exports = function(app, server) {
 
       console.log('card ' + data.cid + '\'s state was changed.');
 
+    });
+
+    socket.on('life_changed', function(data) {
+
+      if (socket.room === undefined) {
+        console.log('life_changed event received on a socket with undefined roomid.');
+        return;
+      }
+
+      var role_index = -1;
+      if (socket.id === games[socket.room].sender_game_sid) {
+        role_index = 0;
+      }
+      else if (socket.id === games[socket.room].recipient_game_sid) {
+        role_index = 1;
+      }
+      if (role_index === -1) {
+        console.log('life_changed event received on a socket with invalid userid.');
+        return;
+      }
+
+      games[socket.room].gamestate.life[role_index] = data.val;
+
+      socket.broadcast.emit('life_changed', data);
+
+      console.log('a player\'s life total was changed to ' + data.val + '.');
+    });
+
+
+    socket.on('poison_changed', function(data) {
+
+      if (socket.room === undefined) {
+        console.log('poison_changed event received on a socket with undefined roomid.');
+        return;
+      }
+
+      var role_index = -1;
+      if (socket.id === games[socket.room].sender_game_sid) {
+        role_index = 0;
+      }
+      else if (socket.id === games[socket.room].recipient_game_sid) {
+        role_index = 1;
+      }
+      if (role_index === -1) {
+        console.log('poison_changed event received on a socket with invalid userid.');
+        return;
+      }
+
+      games[socket.room].gamestate.poison[role_index] = data.val;
+
+      socket.broadcast.emit('poison_changed', data);
+
+      console.log('a player\'s poison count was changed to ' + data.val + '.');
     });
 
 

@@ -38,7 +38,7 @@ html
       div(id="info_bar")
         div(id="zoom_box"  class="info_widget")
         div(id="status_box" class="info_widget")
-          table
+          table(align="center" width="100%")
             thead
               tr
                 th
@@ -50,19 +50,19 @@ html
               tr
                 td LIFE
                 td
-                  input(id="life_set" class="control_button" type="text" size=1 onkeypress="return event.charCode >= 48 && event.charCode <= 57")
-                  a(class="control_button", href="#") set
+                  input(id="life_val" class="control_button" type="text" size=1 onkeypress="return event.charCode >= 48 && event.charCode <= 57")
+                  a(id="life_set" class="control_button", href="#") set
                 td
-                  a(class="control_button", href="#") +
-                  a(class="control_button", href="#") -
+                  a(id="life_inc" class="control_button", href="#") +
+                  a(id="life_dec" class="control_button", href="#") -
                 td: div(id="my_life" align="center")
                 td: div(id="opp_life" align="center")
               tr
                 td POISON
                 td
                 td
-                  a(class="control_button", href="#") +
-                  a(class="control_button", href="#") -
+                  a(id="poison_inc" class="control_button", href="#") +
+                  a(id="poison_dec" class="control_button", href="#") -
                 td: div(id="my_poison" align="center")
                 td: div(id="opp_poison" align="center")
               tr
