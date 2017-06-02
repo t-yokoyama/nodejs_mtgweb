@@ -8,47 +8,8 @@ div {
   box-sizing: border-box;
 }
 
-.info_widget {
-	font-family:Arial;
-	font-size:12px;
-	font-weight:bold;
-	padding:4px 4px;
-	text-decoration:none;
-	text-shadow:0px 1px 0px #ffffff;
-	background-color: #aaaaff;
-}
-
-.control_button {
-	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
-	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
-	box-shadow:inset 0px 1px 0px 0px #ffffff;
-	background-color:#ffffff;
-	-moz-border-radius:4px;
-	-webkit-border-radius:4px;
-	border-radius:4px;
-	border:1px solid #dcdcdc;
-	display:inline-block;
-	cursor:pointer;
-	color:#666666;
-	font-family:Arial;
-	font-size:9px;
-	font-weight:bold;
-	padding:2px 4px;
-	text-decoration:none;
-	text-shadow:0px 1px 0px #ffffff;
-}
-a.control_button:hover {
-	background-color:#f6f6f6;
-}
-a.control_button:active {
-	position:relative;
-	top: 1px;
-}
-
-input#life_val {
-  width: 28px;
-  box-sizing: border-box;
-}
+.my_color { background-color: #ccffcc; }
+.opp_color { background-color: #ffcccc; }
 
 div#window {
   position: absolute;
@@ -58,50 +19,6 @@ div#window {
   bottom: 0px;
   left: 0px;
   right: 0px;
-}
-
-div#info_bar {
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  width: 265px;
-  background-color: #ccccff;
-}
-
-div#zoom_box {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  height: 311px;
-  width: 223px;
-  background-color: #ffffff;
-  background-image: url("../images/back.jpg");
-}
-
-div#status_box {
-  position: absolute;
-  top: 350px;
-  left: 20px;
-  height: 100px;
-  width: 223px;
-}
-
-div#control_box {
-  position: absolute;
-  top: 470px;
-  left: 20px;
-  height: 100px;
-  width: 223px;
-}
-
-div#chat_box {
-  position: absolute;
-  top: 590px;
-  bottom: 20px;
-  left: 20px;
-  width: 223px;
 }
 
 div#battlefield_wrapper {
@@ -117,9 +34,6 @@ div.battlefield {
   height: 50%;
   width: 100%;
 }
-
-div#my_battlefield { background-color: #ffcccc; }
-div#opp_battlefield { background-color: #ccffcc; }
 
 div.zone {
   position: absolute;
@@ -232,3 +146,104 @@ div.cardcanvas_exiled {
 div.cardcanvas_hover {
   outline: 2px solid #ffff00;
 }
+
+div#info_bar {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  width: 265px;
+  background-color: #aaaaff;
+}
+
+div#zoom_box {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  height: 311px;
+  width: 223px;
+  background-color: #ffffff;
+  background-image: url("../images/back.jpg");
+}
+
+div#status_box {
+  position: absolute;
+  top: 350px;
+  left: 20px;
+  height: 250px;
+  width: 223px;
+  background-color: #ccccff;
+}
+
+div#chat_box {
+  position: absolute;
+  top: 620px;
+  bottom: 20px;
+  left: 20px;
+  width: 223px;
+  background-color: #ffffff;
+}
+
+table.info_widget {
+	font-family:Arial;
+	font-size:12px;
+	font-weight:bold;
+	padding:4px 4px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #ffffff;
+	background-color: #ccccff;
+	width: 100%;
+	text-align: center;
+}
+
+td.phase_label {
+	font-size:8px;
+	text-shadow:none;
+}
+
+td.phase_label_active {
+	background-color: #7777ff;
+}
+
+.control_button {
+	-moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background-color:#ffffff;
+	-moz-border-radius:4px;
+	-webkit-border-radius:4px;
+	border-radius:4px;
+	border:1px solid #dcdcdc;
+	display:inline-block;
+	cursor:pointer;
+	color:#666666;
+	font-family:Arial;
+	font-size:9px;
+	font-weight:bold;
+	padding:2px 4px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #ffffff;
+}
+
+a.control_button:hover {
+	background-color:#f6f6f6;
+}
+a.control_button:active {
+	position:relative;
+	top: 1px;
+}
+
+a.action_button {
+  width: 80px; 
+}
+
+div#my_life, div#opp_life {
+  width: 30px;
+}
+
+input#life_val {
+  width: 28px;
+  box-sizing: border-box;
+}
+

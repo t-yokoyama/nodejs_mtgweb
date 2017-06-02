@@ -13,6 +13,8 @@ function initGlobals() {
   window.ZTOP = 100000000;
   window.ZWIDTH = 10000;
 
+  window.g_turn_player = false;
+  window.g_turn_phase = 0;
   window.g_life = 0;
   window.g_life_opp = 0;
   window.g_poison = 0;
@@ -76,6 +78,60 @@ function setClientIOCallbacks() {
     var opp_index = 0;
     if (data.role === 0)
       opp_index = 1;
+    if (data.role === data.gamestate.turn_player)
+      g_turn_player = true;
+    g_turn_phase = data.gamestate.turn_phase;
+    if (g_turn_player) {
+      switch (g_turn_phase) {
+        case 0:
+          $("#phase_my_0").addClass("phase_label_active");
+          break;
+        case 1:
+          $("#phase_my_1").addClass("phase_label_active");
+          break;
+        case 2:
+          $("#phase_my_2").addClass("phase_label_active");
+          break;
+        case 3:
+          $("#phase_my_3").addClass("phase_label_active");
+          break;
+        case 4:
+          $("#phase_my_4").addClass("phase_label_active");
+          break;
+        case 5:
+          $("#phase_my_5").addClass("phase_label_active");
+          break;
+        case 6:
+          $("#phase_my_6").addClass("phase_label_active");
+          break;
+      }
+    }
+    else {
+      switch (g_turn_phase) {
+        case 0:
+          $("#phase_opp_0").addClass("phase_label_active");
+          break;
+        case 1:
+          $("#phase_opp_1").addClass("phase_label_active");
+          break;
+        case 2:
+          $("#phase_opp_2").addClass("phase_label_active");
+          break;
+        case 3:
+          $("#phase_opp_3").addClass("phase_label_active");
+          break;
+        case 4:
+          $("#phase_opp_4").addClass("phase_label_active");
+          break;
+        case 5:
+          $("#phase_opp_5").addClass("phase_label_active");
+          break;
+        case 6:
+          $("#phase_opp_6").addClass("phase_label_active");
+          break;
+      }
+    }
+
     g_life = data.gamestate.life[data.role];
     g_life_opp = data.gamestate.life[opp_index];
     g_poison = data.gamestate.poison[data.role];
@@ -107,6 +163,10 @@ function setClientIOCallbacks() {
       changeCardStateTransform(data.cid);
     if (card.counters != data.counters)
       changeCardStateCounters(data.cid, data.counters);
+  });
+
+  g_client_io.on('advance_phase', function(data) {
+    advancePhase();
   });
 
   g_client_io.on('life_changed', function(data) {
@@ -723,6 +783,77 @@ function zoomCard(p_cid) {
   }
 }
 
+function advancePhase() {
+  if (g_turn_player) {
+    switch (g_turn_phase) {
+      case 0:
+        $("#phase_my_0").removeClass("phase_label_active");
+        $("#phase_my_1").addClass("phase_label_active");
+        break;
+      case 1:
+        $("#phase_my_1").removeClass("phase_label_active");
+        $("#phase_my_2").addClass("phase_label_active");
+        break;
+      case 2:
+        $("#phase_my_2").removeClass("phase_label_active");
+        $("#phase_my_3").addClass("phase_label_active");
+        break;
+      case 3:
+        $("#phase_my_3").removeClass("phase_label_active");
+        $("#phase_my_4").addClass("phase_label_active");
+        break;
+      case 4:
+        $("#phase_my_4").removeClass("phase_label_active");
+        $("#phase_my_5").addClass("phase_label_active");
+        break;
+      case 5:
+        $("#phase_my_5").removeClass("phase_label_active");
+        $("#phase_my_6").addClass("phase_label_active");
+        break;
+      case 6:
+        $("#phase_my_6").removeClass("phase_label_active");
+        $("#phase_opp_0").addClass("phase_label_active");
+        break;
+    }
+  }
+  else {
+    switch (g_turn_phase) {
+      case 0:
+        $("#phase_opp_0").removeClass("phase_label_active");
+        $("#phase_opp_1").addClass("phase_label_active");
+        break;
+      case 1:
+        $("#phase_opp_1").removeClass("phase_label_active");
+        $("#phase_opp_2").addClass("phase_label_active");
+        break;
+      case 2:
+        $("#phase_opp_2").removeClass("phase_label_active");
+        $("#phase_opp_3").addClass("phase_label_active");
+        break;
+      case 3:
+        $("#phase_opp_3").removeClass("phase_label_active");
+        $("#phase_opp_4").addClass("phase_label_active");
+        break;
+      case 4:
+        $("#phase_opp_4").removeClass("phase_label_active");
+        $("#phase_opp_5").addClass("phase_label_active");
+        break;
+      case 5:
+        $("#phase_opp_5").removeClass("phase_label_active");
+        $("#phase_opp_6").addClass("phase_label_active");
+        break;
+      case 6:
+        $("#phase_opp_6").removeClass("phase_label_active");
+        $("#phase_my_0").addClass("phase_label_active");
+        break;
+    }
+  }
+  
+  if (++g_turn_phase == 7) {
+    g_turn_phase = 0;
+    g_turn_player = !g_turn_player;
+  }
+}
 
 function updateStatusBox() {
   $("#my_life").html(g_life);
@@ -731,6 +862,90 @@ function updateStatusBox() {
   $("#opp_poison").html(g_poison_opp);
   $("#my_libsize").html(g_library[0].length);
   $("#opp_libsize").html(g_library[1].length);
+}
+
+
+function setLife(p_val) {
+  g_life = p_val;
+  updateStatusBox();
+  g_client_io.emit('life_changed', { val: p_val });
+}
+
+
+function setPoison(p_val) {
+  g_poison = p_val;
+  updateStatusBox();
+  g_client_io.emit('poison_changed', { val: p_val });
+}
+
+
+function createRCMenu(e) {
+
+  var menuTitle = undefined;
+  var menuItems = [];
+
+  // FIXME conditonally change labels based on card frame type
+
+  var card = g_directory[g_rcCardId];
+
+  var on_battlefield = (card.zone === ZoneEnum.BATTLEFIELD);
+  
+  var turnLabel = "Turn face down";
+  if (card.faceDown)
+    turnLabel = "Turn face up";
+
+  menuItems.push({ label: turnLabel,
+                   icon:'images/icons/icon1.png',
+                   isEnabled: function() { return on_battlefield; },
+                   action: function() { changeCardStateFace(g_rcCardId); emitCardState(g_rcCardId); } });
+  menuItems.push({ label:'Flip',
+                   icon:'images/icons/icon2.png',
+                   isEnabled: function() { return (on_battlefield && g_directory[g_rcCardId].frame === 2); },
+                   action: function() { changeCardStateFlip(g_rcCardId); emitCardState(g_rcCardId); } });
+  menuItems.push({ label:'Transform',
+                   icon:'images/icons/icon3.png',
+                   isEnabled: function() { return (on_battlefield && g_directory[g_rcCardId].frame === 3); },
+                   action: function() { changeCardStateTransform(g_rcCardId); emitCardState(g_rcCardId); } });
+  menuItems.push(null);
+  menuItems.push({ label:'Add a counter',
+                   icon:'images/icons/icon1.png',
+                   isEnabled: function() { return on_battlefield; },
+                   action: function() { changeCardStateCounters(g_rcCardId, g_directory[g_rcCardId].counters + 1); emitCardState(g_rcCardId); } });
+  menuItems.push({ label:'Remove a counter',
+                   icon:'images/icons/icon1.png',
+                   isEnabled: function() { return (on_battlefield && g_directory[g_rcCardId].counters > 0); },
+                   action: function() { changeCardStateCounters(g_rcCardId, g_directory[g_rcCardId].counters - 1); emitCardState(g_rcCardId); } });
+
+  // code below mostly borrowed from jquery-simple-context-menu
+
+  var menu = $('<ul class="contextMenuPlugin"><div class="gutterLine"></div></ul>')
+    .appendTo(document.body);
+  if (menuTitle) {
+    $('<li class="header"></li>').text(menuTitle).appendTo(menu);
+  }
+  menuItems.forEach(function(item) {
+    if (item) {
+      var rowCode = '<li><a href="#" class="contextMenuLink"><span class="itemTitle"></span></a></li>';
+      var row = $(rowCode).appendTo(menu);
+      if(item.icon){
+        var icon = $('<img>');
+        icon.attr('src', item.icon);
+        icon.insertBefore(row.find('.itemTitle'));
+      }
+      row.find('.itemTitle').text(item.label);
+        
+      if (item.isEnabled != undefined && !item.isEnabled()) {
+          row.addClass('disabled');
+      } else if (item.action) {
+          row.find('.contextMenuLink').click(function () { item.action(e); });
+      }
+
+    } else {
+      $('<li class="divider"></li>').appendTo(menu);
+    }
+  });
+  menu.find('.header').text(menuTitle);
+  return menu;
 }
 
 
@@ -903,17 +1118,17 @@ function enableInteractivity() {
     }
   }
 
-  $("#life_inc").click(function() {
+  $("#button_life_inc").click(function() {
     if (g_life < 999)
       setLife(g_life + 1);
   });
 
-  $("#life_dec").click(function() {
+  $("#button_life_dec").click(function() {
     if (g_life > -999)
       setLife(g_life - 1);
   });
 
-  $("#life_set").click(function() {
+  $("#button_life_set").click(function() {
     var val = $("#life_val").val();
     if (val.length > 0 && val.length < 4) {
       setLife(val);
@@ -921,99 +1136,22 @@ function enableInteractivity() {
     }
   });
 
-  $("#poison_dec").click(function() {
-    setPoison(g_poison - 1);
+  $("#button_poison_inc").click(function() {
+    if (g_poison < 10)
+      setPoison(g_poison + 1);
   });
 
-  $("#poison_inc").click(function() {
-    setPoison(g_poison + 1);
+  $("#button_poison_dec").click(function() {
+    if (g_poison > 0)
+      setPoison(g_poison - 1);
   });
-}
 
-
-function createRCMenu(e) {
-
-  var menuTitle = undefined;
-  var menuItems = [];
-
-  // FIXME conditonally change labels based on card frame type
-
-  var card = g_directory[g_rcCardId];
-
-  if (card.zone === ZoneEnum.BATTLEFIELD) {
-
-    var turnLabel = "Turn face down";
-    if (card.faceDown)
-      turnLabel = "Turn face up";
-  
-    menuItems.push({ label: turnLabel,
-                     icon:'images/icons/icon1.png',
-                     isEnabled: function() { return true; },
-                     action: function() { changeCardStateFace(g_rcCardId); emitCardState(g_rcCardId); } });
-    menuItems.push({ label:'Flip',
-                     icon:'images/icons/icon2.png',
-                     isEnabled: function() { return (g_directory[g_rcCardId].frame === 2); },
-                     action: function() { changeCardStateFlip(g_rcCardId); emitCardState(g_rcCardId); } });
-    menuItems.push({ label:'Transform',
-                     icon:'images/icons/icon3.png',
-                     isEnabled: function() { return (g_directory[g_rcCardId].frame === 3); },
-                     action: function() { changeCardStateTransform(g_rcCardId); emitCardState(g_rcCardId); } });
-    menuItems.push(null);
-    menuItems.push({ label:'Add a counter',
-                     icon:'images/icons/icon1.png',
-                     isEnabled: function() { return true; },
-                     action: function() { changeCardStateCounters(g_rcCardId, g_directory[g_rcCardId].counters + 1); emitCardState(g_rcCardId); } });
-    menuItems.push({ label:'Remove a counter',
-                     icon:'images/icons/icon1.png',
-                     isEnabled: function() { return (g_directory[g_rcCardId].counters > 0); },
-                     action: function() { changeCardStateCounters(g_rcCardId, g_directory[g_rcCardId].counters - 1); emitCardState(g_rcCardId); } });
-  }
-  else {
-    menuItems.push(null);
-  }
-
-  // code below mostly borrowed from jquery-simple-context-menu
-
-  var menu = $('<ul class="contextMenuPlugin"><div class="gutterLine"></div></ul>')
-    .appendTo(document.body);
-  if (menuTitle) {
-    $('<li class="header"></li>').text(menuTitle).appendTo(menu);
-  }
-  menuItems.forEach(function(item) {
-    if (item) {
-      var rowCode = '<li><a href="#" class="contextMenuLink"><span class="itemTitle"></span></a></li>';
-      var row = $(rowCode).appendTo(menu);
-      if(item.icon){
-        var icon = $('<img>');
-        icon.attr('src', item.icon);
-        icon.insertBefore(row.find('.itemTitle'));
-      }
-      row.find('.itemTitle').text(item.label);
-        
-      if (item.isEnabled != undefined && !item.isEnabled()) {
-          row.addClass('disabled');
-      } else if (item.action) {
-          row.find('.contextMenuLink').click(function () { item.action(e); });
-      }
-
-    } else {
-      $('<li class="divider"></li>').appendTo(menu);
+  $("#button_next_phase").click(function() {
+    if (g_turn_player) {
+      advancePhase();
+      g_client_io.emit('advance_phase');
     }
   });
-  menu.find('.header').text(menuTitle);
-  return menu;
 }
 
 
-function setLife(p_val) {
-  g_life = p_val;
-  updateStatusBox();
-  g_client_io.emit('life_changed', { val: p_val });
-}
-
-
-function setPoison(p_val) {
-  g_poison = p_val;
-  updateStatusBox();
-  g_client_io.emit('poison_changed', { val: p_val });
-}

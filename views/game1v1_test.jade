@@ -37,50 +37,78 @@ html
     div(id="window")
       div(id="info_bar")
         div(id="zoom_box"  class="info_widget")
-        div(id="status_box" class="info_widget")
-          table(align="center" width="100%")
-            thead
-              tr
-                th
-                th
-                th
-                th me
-                th opp.
+        div(id="status_box")
+
+          table(id="phase_widget" class="info_widget")
+            tbody
+              tr: td(colspan=7) TURN PHASE
+              tr(class="my_color")
+                td(id="phase_my_0" class="phase_label") UNTAP
+                td(id="phase_my_1" class="phase_label") UPKEEP
+                td(id="phase_my_2" class="phase_label") DRAW
+                td(id="phase_my_3" class="phase_label") MAIN
+                td(id="phase_my_4" class="phase_label") COMBAT
+                td(id="phase_my_5" class="phase_label") MAIN2
+                td(id="phase_my_6" class="phase_label") END
+              tr(class="opp_color")
+                td(id="phase_opp_0" class="phase_label") UNTAP
+                td(id="phase_opp_1" class="phase_label") UPKEEP
+                td(id="phase_opp_2" class="phase_label") DRAW
+                td(id="phase_opp_3" class="phase_label") MAIN
+                td(id="phase_opp_4" class="phase_label") COMBAT
+                td(id="phase_opp_5" class="phase_label") MAIN2
+                td(id="phase_opp_6" class="phase_label") END
+          table(id="status_widget" class="info_widget")
             tbody
               tr
                 td LIFE
                 td
                   input(id="life_val" class="control_button" type="text" size=1 onkeypress="return event.charCode >= 48 && event.charCode <= 57")
-                  a(id="life_set" class="control_button", href="#") set
+                  a(id="button_life_set" class="control_button", href="#") set
                 td
-                  a(id="life_inc" class="control_button", href="#") +
-                  a(id="life_dec" class="control_button", href="#") -
-                td: div(id="my_life" align="center")
-                td: div(id="opp_life" align="center")
+                  a(id="button_life_inc" class="control_button", href="#") +
+                  a(id="button_life_dec" class="control_button", href="#") -
+                td(class="my_color"): div(id="my_life")
+                td(class="opp_color"): div(id="opp_life")
               tr
                 td POISON
                 td
                 td
-                  a(id="poison_inc" class="control_button", href="#") +
-                  a(id="poison_dec" class="control_button", href="#") -
-                td: div(id="my_poison" align="center")
-                td: div(id="opp_poison" align="center")
+                  a(id="button_poison_inc" class="control_button", href="#") +
+                  a(id="button_poison_dec" class="control_button", href="#") -
+                td(class="my_color"): div(id="my_poison")
+                td(class="opp_color"): div(id="opp_poison")
               tr
                 td LIBRARY
                 td
                 td
-                td: div(id="my_libsize" align="center")
-                td: div(id="opp_libsize" align="center")
+                td(class="my_color"): div(id="my_libsize")
+                td(class="opp_color"): div(id="opp_libsize")
 
-        div(id="control_box" class="info_widget")
+          table(id="control_widget" class="info_widget")
+            tbody
+              tr
+                td(align="center"): a(id="button_untap" class="control_button action_button", href="#") untap all [U]
+                td(align="center"): a(id="button_shuffle" class="control_button action_button", href="#") shuffle library
+              tr
+                td(align="center"): a(id="button_draw" class="control_button action_button", href="#") draw a card
+                td(align="center"): a(id="button_peek" class="control_button action_button", href="#") look at top card
+              tr
+                td(align="center"): a(id="button_flip_coin" class="control_button action_button", href="#") flip a coin
+                td(align="center"): a(id="button_next_phase" class="control_button action_button", href="#") end phase
+              tr
+                td(align="center"): a(id="button_search" class="control_button action_button", href="#") search library
+              tr
+                td(align="center"): a(id="button_create_token" class="control_button action_button", href="#") create token
+
         div(id="chat_box" class="info_widget")
       div(id="battlefield_wrapper")
-        div(class="battlefield", id="opp_battlefield") opp_battlefield
+        div(class="battlefield opp_color", id="opp_battlefield") opp_battlefield
           div(class="opp_zone", id="opp_hand") opp_hand
           div(class="opp_zone", id="opp_library") opp_library
           div(class="opp_zone", id="opp_graveyard") opp_graveyard
           div(class="opp_zone", id="opp_exile") opp_exile
-        div(class="battlefield", id="my_battlefield") my_battlefield
+        div(class="battlefield my_color", id="my_battlefield") my_battlefield
           div(class="zone", id="library") library
           div(class="zone", id="graveyard") graveyard
           div(class="zone", id="exile") exile

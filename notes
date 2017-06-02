@@ -89,8 +89,9 @@ TODO
 6/1/17:
  - add info zone to the left
    x zoom zone
-   - status zone: life (+/-/set), poison (+/-), phase, notes
-   - control zone: draw card, shuffle deck, make token (name/p/t), end phase
+   x status zone: life (+/-/set), poison (+/-)
+   - phase zone
+   - control zone: draw card, next phase, shuffle library, make token/emblem, get card, flip coin
    - chat zone
  - deck builder page
 
@@ -106,10 +107,10 @@ TODO
 
 
  GAMEPLAY TODO
+ - randomly determine starting player
  - fix the z-index (it was broken during the port from a single html file to jade/js/css)
    - invert the z-index calculation for opponent's cards
  - implement sidebar (card blowup, chat window, turn phase, life totals, etc.)
- - buttons: shuffle library, restart game, mulligan, make token/emblem, get card, flip coin, roll die
  - figure out how to conditionally gray out certain rcmenu items
  - keyboard shortcuts for moveToXZone?
  - implement token generation

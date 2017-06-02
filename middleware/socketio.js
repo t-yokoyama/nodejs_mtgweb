@@ -149,7 +149,8 @@ module.exports = function(app, server) {
                      recipient_did: -1,
                      recipient_state: 'CHALLENGE_RECEIVED',
                      recipient_game_sid: -1,
-                     gamestate: { turn_phase: 0,
+                     gamestate: { turn_player: 0,
+                                  turn_phase: 0,
                                   life: [20, 20],
                                   poison: [0, 0],
                                   cards: [],
@@ -549,9 +550,27 @@ module.exports = function(app, server) {
       socket.broadcast.emit('card_changed', data);
 
       console.log('card ' + data.cid + '\'s state was changed.');
-
     });
 
+    socket.on('advance_phase', function(data) {
+
+      if (socket.room === undefined) {
+        console.log('advance_phase event received on a socket with undefined roomid.');
+        return;
+      }
+
+      if (++games[socket.room].gamestate.turn_phase === 7) {
+        games[socket.room].gamestate.turn_phase = 0;
+        if (games[socket.room].gamestate.turn_player === 0)
+          games[socket.room].gamestate.turn_player = 1;
+        else games[socket.room].gamestate.turn_player = 0;
+      }
+      
+      socket.broadcast.emit('advance_phase', data);
+
+      console.log('turn phase was advanced.');
+    });
+    
     socket.on('life_changed', function(data) {
 
       if (socket.room === undefined) {
@@ -681,7 +700,8 @@ var initialize_test_game = function (games) {
                recipient_did: -1,
                recipient_state: 'ROOM_OPENED',
                recipient_game_sid: -1,
-               gamestate: { turn_phase: 0,
+               gamestate: { turn_player: 0,
+                            turn_phase: 0,
                             life: [20, 20],
                             poison: [0, 0],
                             cards: [],
