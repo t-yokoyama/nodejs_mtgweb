@@ -431,6 +431,12 @@ module.exports = function(app, server) {
     });
 
 
+    socket.on('chat_message', function(data){
+      console.log('game chat message: ' + data.username + ": " + data.msg);
+      socket.broadcast.emit('chat_message', data);
+    });
+
+
     socket.on('card_moved', function(data) {
 
       if (socket.room === undefined) {

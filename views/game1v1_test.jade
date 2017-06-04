@@ -19,6 +19,7 @@ html
 
         var client_io = io('/game1v1');
         window.g_client_io = client_io;
+        window.g_username = "test_user";
 
         initGlobals();
         setClientIOCallbacks();
@@ -108,6 +109,13 @@ html
                   input#token_name.control_button(type="text")
 
         div#chat_box.info_widget
+          div#chat_messages
+            ul#message_list
+          div#chat_input
+            form#message_form(action='')
+              input#message_buffer(autocomplete='off')
+              button#message_send_button(disabled) Send
+
       div#battlefield_wrapper
         div#opp_battlefield.battlefield.opp_color opp_battlefield
           div#opp_hand.opp_zone opp_hand

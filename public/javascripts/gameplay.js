@@ -141,6 +141,13 @@ function setClientIOCallbacks() {
     enableInteractivity();
   });
 
+
+  g_client_io.on('chat_message', function(data){
+    $('#message_list').append('<li class="message_item_opp"><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
+    $('#chat_messages').animate({ scrollTop: $('#chat_messages')[0].scrollHeight}, 1000);
+  });
+
+
   g_client_io.on('card_moved', function(data) {
 
     moveCardToZone(data.cid, data.toZone, data.faceDown, false);
@@ -1152,6 +1159,23 @@ function enableInteractivity() {
       g_client_io.emit('advance_phase');
     }
   });
+
+  $("#message_form").submit(function() {
+    if ($("#message_buffer").val() != '') {
+
+      var message = $('#message_buffer').val();
+      g_client_io.emit('chat_message', { username: g_username,
+                                         msg: message });
+      $("#message_buffer").val('');
+
+      $('#message_list').append('<li class="message_item_me"><strong>' + g_username + '</strong>: ' + message + '</li>');
+      $('#chat_messages').animate({ scrollTop: $('#chat_messages')[0].scrollHeight}, 1000);
+    }
+    return false;
+  });
+
+  $('#message_send_button').prop('disabled', false);
+
 }
 
 

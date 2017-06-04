@@ -228,6 +228,7 @@ td.phase_label_active {
 a.control_button:hover {
 	background-color:#f6f6f6;
 }
+
 a.control_button:active {
 	position:relative;
 	top: 1px;
@@ -250,4 +251,17 @@ input#token_name {
   width: 60px;
   box-sizing: border-box;
 }
+
+div#chat_messages { position: absolute; top: 0px; bottom: 24px; left: 0px; right: 0px; overflow-y: scroll; }
+div#chat_input { position: absolute; height: 24px; bottom: 0px; left: 0px; right: 0px; background-color: #444444; }
+
+form#message_form input { position: absolute; width: 171px; top: 2px; bottom: 2px; left: 2px; border: 0px; padding: 3px; font-family: Arial; font-size: 9px; }
+form#message_form button { position: absolute; width: 40px; top: 2px; bottom: 2px; right: 2px; border: 0px; background: #cccccc; font-family: Arial; font-size: 9px; }
+
+#message_list { list-style-type: none; margin: 0; padding: 0; }
+#message_list li { padding: 3px 5px; font-family: Arial; font-size: 9px; }
+#message_list li:nth-child(even) { background: #eeeeee; }
+li.message_item_me { color: #009900; }
+li.message_item_opp { color: #990000; }
+li.system { font-style: italic; }
 
