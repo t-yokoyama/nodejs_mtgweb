@@ -401,6 +401,7 @@ module.exports = function(app, server) {
       socket.join(data.roomid);
 
       var role_index = -1;
+      var opp_username;
       if (data.userid === games[data.roomid].sender_uid) {
         if (games[data.roomid].sender_game_sid != -1 & socket.id != games[data.roomid].sender_game_sid) {
           console.log('transferring game control to a new client and disconnecting the old one.');
@@ -411,6 +412,8 @@ module.exports = function(app, server) {
         }
         games[data.roomid].sender_game_sid = socket.id;
         role_index = 0;
+        var recipient_lobby_sid = games[data.roomid].recipient_lobby_sid;
+        opp_username = users_by_sid[recipient_lobby_sid].username;
       }
       else if (data.userid === games[data.roomid].recipient_uid) {
         if (games[data.roomid].recipient_game_sid != -1 & socket.id != games[data.roomid].recipient_game_sid) {
@@ -422,17 +425,21 @@ module.exports = function(app, server) {
         }
         games[data.roomid].recipient_game_sid = socket.id;
         role_index = 1;
+        var sender_lobby_sid = games[data.roomid].sender_lobby_sid;
+        opp_username = users_by_sid[sender_lobby_sid].username;
       }
       
       // FIXME disconnect any other sockets with the same uid to prevent multiple sockets controlling the state of a player
 
+
       socket.emit('initialize_gamestate', { gamestate: games[data.roomid].gamestate,
-                                            role: role_index });
+                                            role: role_index,
+                                            opponent: opp_username });
     });
 
 
     socket.on('chat_message', function(data){
-      console.log('game chat message: ' + data.username + ": " + data.msg);
+      console.log('game chat message: ' + data.msg);
       socket.broadcast.emit('chat_message', data);
     });
 

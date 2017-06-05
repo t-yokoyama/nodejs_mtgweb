@@ -84,15 +84,19 @@ TODO
  x send card status change across socket (tap, counters, flip, transform, etc)
  x right menu: conditonally change labels based on card state
  x implement card counters
+ x add info zone to the left
 
 
-6/1/17:
- - add info zone to the left
-   x zoom zone
-   x status zone: life (+/-/set), poison (+/-)
-   - phase zone
-   - control zone: draw card, next phase, shuffle library, make token/emblem, get card, flip coin
-   - chat zone
+6/4/17:
+ - implement buttons:
+   - untap all
+   - shuffle library
+   - draw card
+   - peek
+   - flip coin
+   - search library
+   - make token/emblem
+ - implement system messages in game chat
  - deck builder page
 
 

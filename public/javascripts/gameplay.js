@@ -13,6 +13,7 @@ function initGlobals() {
   window.ZTOP = 100000000;
   window.ZWIDTH = 10000;
 
+  window.g_opponent_name = "unknown";
   window.g_turn_player = false;
   window.g_turn_phase = 0;
   window.g_life = 0;
@@ -42,6 +43,8 @@ function setClientIOCallbacks() {
   });
 
   g_client_io.on('initialize_gamestate', function(data) {
+    
+    g_opponent_name = data.opponent;
 
     // iterate over all the cards in the gamestate array, assigning card ownership based on data.role
     for (var i = 0; i < data.gamestate.cards.length; i++) {
@@ -143,7 +146,7 @@ function setClientIOCallbacks() {
 
 
   g_client_io.on('chat_message', function(data){
-    $('#message_list').append('<li class="message_item_opp"><strong>' + data.username + '</strong>: ' + data.msg + '</li>');
+    $('#message_list').append('<li class="message_item_opp"><strong>' + g_opponent_name + '</strong>: ' + data.msg + '</li>');
     $('#chat_messages').animate({ scrollTop: $('#chat_messages')[0].scrollHeight}, 1000);
   });
 
@@ -1164,8 +1167,7 @@ function enableInteractivity() {
     if ($("#message_buffer").val() != '') {
 
       var message = $('#message_buffer').val();
-      g_client_io.emit('chat_message', { username: g_username,
-                                         msg: message });
+      g_client_io.emit('chat_message', { msg: message });
       $("#message_buffer").val('');
 
       $('#message_list').append('<li class="message_item_me"><strong>' + g_username + '</strong>: ' + message + '</li>');
