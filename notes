@@ -97,6 +97,12 @@ TODO
    - search library
    - make token/emblem
  - implement system messages in game chat
+   x advance phase
+   x life change
+   x poison change
+   - card change zone
+   - card change state
+   - card tap
  - deck builder page
 
 

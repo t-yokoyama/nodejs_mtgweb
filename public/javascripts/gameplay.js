@@ -10,6 +10,12 @@ function initGlobals() {
     EXILE : 5
   };
   
+  window.MessageEnum = {
+    ME: 1,
+    OPPONENT: 2,
+    SYSTEM: 3
+  };
+  
   window.ZTOP = 100000000;
   window.ZWIDTH = 10000;
 
@@ -146,8 +152,7 @@ function setClientIOCallbacks() {
 
 
   g_client_io.on('chat_message', function(data){
-    $('#message_list').append('<li class="message_item_opp"><strong>' + g_opponent_name + '</strong>: ' + data.msg + '</li>');
-    $('#chat_messages').animate({ scrollTop: $('#chat_messages')[0].scrollHeight}, 1000);
+      addChatMessage(MessageEnum.OPP, data.msg);
   });
 
 
@@ -182,11 +187,13 @@ function setClientIOCallbacks() {
   g_client_io.on('life_changed', function(data) {
     g_life_opp = data.val;
     updateStatusBox();
+    addChatMessage(MessageEnum.SYSTEM, g_opponent_name + '\'s life total set to ' + p_val + '.');
   });
   
   g_client_io.on('poison_changed', function(data) {
     g_poison_opp = data.val;
     updateStatusBox();
+    addChatMessage(MessageEnum.SYSTEM, g_opponent_name + '\'s poison counters set to ' + p_val + '.');
   });
 }
 
@@ -793,36 +800,62 @@ function zoomCard(p_cid) {
   }
 }
 
+function addChatMessage(p_type, p_msg) {
+  var li;
+  switch(p_type) {
+    case MessageEnum.ME:
+      li = '<li class="message_item_me"><strong>' + g_username + '</strong>: ' + p_msg + '</li>';
+      break;
+    case MessageEnum.OPPONENT:
+      li = '<li class="message_item_opp"><strong>' + g_opponent_name + '</strong>: ' + p_msg + '</li>';
+      break;
+    case MessageEnum.SYSTEM:
+      li = '<li class="system">' + p_msg + '</li>';
+      break;
+  }
+
+  $('#message_list').append(li);
+  $('#chat_messages').animate({ scrollTop: $('#chat_messages')[0].scrollHeight}, 1000);
+}
+
 function advancePhase() {
+  var desc = 'Entering ';
   if (g_turn_player) {
     switch (g_turn_phase) {
       case 0:
         $("#phase_my_0").removeClass("phase_label_active");
         $("#phase_my_1").addClass("phase_label_active");
+        desc += g_username + '\'s upkeep phase.';
         break;
       case 1:
         $("#phase_my_1").removeClass("phase_label_active");
         $("#phase_my_2").addClass("phase_label_active");
+        desc += g_username + '\'s draw phase.';
         break;
       case 2:
         $("#phase_my_2").removeClass("phase_label_active");
         $("#phase_my_3").addClass("phase_label_active");
+        desc += g_username + '\'s main phase 1.';
         break;
       case 3:
         $("#phase_my_3").removeClass("phase_label_active");
         $("#phase_my_4").addClass("phase_label_active");
+        desc += g_username + '\'s combat phase.';
         break;
       case 4:
         $("#phase_my_4").removeClass("phase_label_active");
         $("#phase_my_5").addClass("phase_label_active");
+        desc += g_username + '\'s main phase 2.';
         break;
       case 5:
         $("#phase_my_5").removeClass("phase_label_active");
         $("#phase_my_6").addClass("phase_label_active");
+        desc += g_username + '\'s end phase.';
         break;
       case 6:
         $("#phase_my_6").removeClass("phase_label_active");
         $("#phase_opp_0").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s untap phase.';
         break;
     }
   }
@@ -831,30 +864,37 @@ function advancePhase() {
       case 0:
         $("#phase_opp_0").removeClass("phase_label_active");
         $("#phase_opp_1").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s upkeep phase.';
         break;
       case 1:
         $("#phase_opp_1").removeClass("phase_label_active");
         $("#phase_opp_2").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s draw phase.';
         break;
       case 2:
         $("#phase_opp_2").removeClass("phase_label_active");
         $("#phase_opp_3").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s main phase 1.';
         break;
       case 3:
         $("#phase_opp_3").removeClass("phase_label_active");
         $("#phase_opp_4").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s combat phase.';
         break;
       case 4:
         $("#phase_opp_4").removeClass("phase_label_active");
         $("#phase_opp_5").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s main phase 2.';
         break;
       case 5:
         $("#phase_opp_5").removeClass("phase_label_active");
         $("#phase_opp_6").addClass("phase_label_active");
+        desc += g_opponent_name + '\'s end phase.';
         break;
       case 6:
         $("#phase_opp_6").removeClass("phase_label_active");
         $("#phase_my_0").addClass("phase_label_active");
+        desc += g_username + '\'s untap phase.';
         break;
     }
   }
@@ -863,6 +903,8 @@ function advancePhase() {
     g_turn_phase = 0;
     g_turn_player = !g_turn_player;
   }
+
+  addChatMessage(MessageEnum.SYSTEM, desc);
 }
 
 function updateStatusBox() {
@@ -878,6 +920,7 @@ function updateStatusBox() {
 function setLife(p_val) {
   g_life = p_val;
   updateStatusBox();
+  addChatMessage(MessageEnum.SYSTEM, g_username + '\'s life total set to ' + p_val + '.');
   g_client_io.emit('life_changed', { val: p_val });
 }
 
@@ -885,6 +928,7 @@ function setLife(p_val) {
 function setPoison(p_val) {
   g_poison = p_val;
   updateStatusBox();
+  addChatMessage(MessageEnum.SYSTEM, g_username + '\'s poison counters set to ' + p_val + '.');
   g_client_io.emit('poison_changed', { val: p_val });
 }
 
@@ -1169,9 +1213,7 @@ function enableInteractivity() {
       var message = $('#message_buffer').val();
       g_client_io.emit('chat_message', { msg: message });
       $("#message_buffer").val('');
-
-      $('#message_list').append('<li class="message_item_me"><strong>' + g_username + '</strong>: ' + message + '</li>');
-      $('#chat_messages').animate({ scrollTop: $('#chat_messages')[0].scrollHeight}, 1000);
+      addChatMessage(MessageEnum.ME, message);
     }
     return false;
   });
